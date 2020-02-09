@@ -1,0 +1,5 @@
+#cmakedefine CMAKE_PROJECT_VERSION "@CMAKE_PROJECT_VERSION@"
+
+extern const char * GIT_DIRTY;
+extern const char * GIT_HASH;
+extern const char * GIT_COMMITS;
