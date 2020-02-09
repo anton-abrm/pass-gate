@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0" connectslotsbyname="false">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Pass Gate</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QGridLayout" name="main_layout">
+      <item row="5" column="0">
+       <widget class="QLineEdit" name="secret_line_edit">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+         </font>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="inputMask">
+         <string/>
+        </property>
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
+        <property name="placeholderText">
+         <string>Pa$$word</string>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QPushButton" name="enter_button">
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string>Enter</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QPushButton" name="show_secret_button">
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
+        <property name="text">
+         <string>Show</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QPushButton" name="clear_button">
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string>Clear</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="go_button">
+        <property name="text">
+         <string>Go</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QComboBox" name="command_combo_box">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::WheelFocus</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="3">
+       <widget class="QPlainTextEdit" name="data_plain_edit">
+        <property name="font">
+         <font>
+          <family>Monospace</family>
+         </font>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="undoRedoEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QComboBox" name="format_combo_box">
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+        <item>
+         <property name="text">
+          <string>12hhhh</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>12hhhx</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>16hhhs</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>08xxax</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>04xxax</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QLineEdit" name="source_line_edit">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="placeholderText">
+         <string>github/anon/1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="apply_button">
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string>Apply</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QLineEdit" name="pkcs11_line_edit">
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="readOnly">
+         <bool>false</bool>
+        </property>
+        <property name="placeholderText">
+         <string>/usr/lib/libeTPkcs11.so</string>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QComboBox" name="key_combo_box">
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="pin_button">
+        <property name="focusPolicy">
+         <enum>Qt::ClickFocus</enum>
+        </property>
+        <property name="text">
+         <string>Pin</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <tabstops>
+  <tabstop>source_line_edit</tabstop>
+  <tabstop>format_combo_box</tabstop>
+  <tabstop>command_combo_box</tabstop>
+  <tabstop>go_button</tabstop>
+  <tabstop>show_secret_button</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
