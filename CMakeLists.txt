@@ -24,7 +24,7 @@ add_executable(pass-gate
         Password/Password.cpp
         PKCS11/PKCS11.cpp
         Keyboard/Keyboard.cpp
-        Convert/Convert.cpp)
+        Convert/Convert.cpp PKCS11/RSACertificate.cpp PKCS11/RSACertificate.h)
 
 target_link_libraries(pass-gate
         Qt5::Core

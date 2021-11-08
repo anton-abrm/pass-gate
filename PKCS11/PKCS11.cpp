@@ -9,7 +9,6 @@
 #include <pkcs11-helper-1.0/pkcs11h-certificate.h>
 
 static constexpr size_t c_max_certificate_size = 4096;
-static constexpr size_t c_max_signature_size = 4096;
 
 static std::function<bool(std::u8string &)> pin_callback;
 static std::function<void()> slot_callback;
@@ -127,6 +126,11 @@ namespace PKCS11 {
 
     }
 
+    void terminate() {
+        check_ck_rv("Unable to terminate PKCS11 library.",
+                    pkcs11h_terminate());
+    }
+
     void add_provider(const std::u8string_view &reference, const std::u8string_view &provider) {
         check_ck_rv("Unable to register provider.",
                     pkcs11h_addProvider(
@@ -140,80 +144,10 @@ namespace PKCS11 {
                     ));
     }
 
-    void *get_certificate(const std::span<const uint8_t> &id) {
-
-        pkcs11h_certificate_id_list_t cert_ids{nullptr};
-
-        std::unique_ptr<pkcs11h_certificate_id_list_s, decltype(&pkcs11h_certificate_freeCertificateIdList)>
-                certificates_guard(cert_ids, &pkcs11h_certificate_freeCertificateIdList);
-
-        check_ck_rv("Unable to get cert_ids.",
-                    pkcs11h_certificate_enumCertificateIds(
-                            PKCS11H_ENUM_METHOD_CACHE,
-                            nullptr,
-                            PKCS11H_PROMPT_MASK_ALLOW_ALL,
-                            nullptr,
-                            &cert_ids));
-
-        pkcs11h_certificate_t result{nullptr};
-
-        for (auto cert_id = cert_ids; cert_id != nullptr; cert_id = cert_id->next) {
-
-            const std::span<const uint8_t> current_id(
-                    cert_id->certificate_id->attrCKA_ID,
-                    cert_id->certificate_id->attrCKA_ID_size);
-
-            if (id.size() != current_id.size())
-                continue;
-
-            if (!std::equal(id.begin(), id.end(), current_id.begin()))
-                continue;
-
-            check_ck_rv("Unable to create certificate.",
-                        pkcs11h_certificate_create(
-                                cert_id->certificate_id,
-                                nullptr,
-                                PKCS11H_PROMPT_MASK_ALLOW_ALL,
-                                PKCS11H_PIN_CACHE_INFINITE,
-                                &result));
-            break;
-        }
-
-        return result;
-    }
-
-    void free_certificate(void *cert) {
-
-        if (cert == nullptr)
-            throw std::invalid_argument("Unable to free cert. Cert is null.");
-
-        check_ck_rv("Unable to free cert.",
-                    pkcs11h_certificate_freeCertificate(
-                            reinterpret_cast<pkcs11h_certificate_t>(cert)));
-    }
-
-    std::vector<uint8_t> decrypt(void *cert, const std::span<const uint8_t> &data) {
-
-        if (cert == nullptr)
-            throw std::invalid_argument("Unable to decrypt. Cert is null.");
-
-        size_t plain_size{c_max_signature_size};
-
-        std::vector<uint8_t> plain(plain_size);
-
-        check_ck_rv("Unable to decrypt data.",
-                    pkcs11h_certificate_decrypt(
-                            reinterpret_cast<pkcs11h_certificate_t>(cert),
-                            CKM_RSA_PKCS,
-                            data.data(),
-                            data.size(),
-                            plain.data(),
-                            &plain_size
-                    ));
-
-        plain.resize(plain_size);
-
-        return plain;
+    void remove_provider(const std::u8string_view &reference) {
+        check_ck_rv("Unable to remove provider.",
+                    pkcs11h_removeProvider(
+                            reinterpret_cast<const char *>(reference.data())));
     }
 
     void set_pin_callback(std::function<bool(std::u8string &)> callback) {
@@ -222,93 +156,6 @@ namespace PKCS11 {
 
     void set_slot_callback(std::function<void()> callback) {
         slot_callback = std::move(callback);
-    }
-
-    void terminate() {
-        check_ck_rv("Unable to terminate PKCS11 library.",
-                    pkcs11h_terminate());
-    }
-
-    std::vector<uint8_t> encrypt(void *cert, const std::span<const uint8_t> &data) {
-
-        if (cert == nullptr) {
-            throw std::invalid_argument("Unable to encrypt. Cert is null.");
-        }
-
-        size_t cert_size{c_max_certificate_size};
-
-        auto certificate_blob{std::make_unique<uint8_t[]>(cert_size)};
-
-        check_ck_rv("Unable to get certificate_blob.",
-                    pkcs11h_certificate_getCertificateBlob(
-                            reinterpret_cast<pkcs11h_certificate_t>(cert),
-                            certificate_blob.get(),
-                            &cert_size));
-
-        std::unique_ptr<BIO, decltype(&BIO_free)> bio(
-                BIO_new_mem_buf(
-                        certificate_blob.get(),
-                        static_cast<int>(cert_size)),
-                &BIO_free);
-
-        X509 *x509_ptr{nullptr};
-
-        d2i_X509_bio(bio.get(), &x509_ptr);
-
-        std::unique_ptr<X509, decltype(&X509_free)> x509(
-                x509_ptr,
-                &X509_free);
-
-        std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> evp_pkey(
-                X509_get_pubkey(x509.get()),
-                &EVP_PKEY_free);
-
-        std::unique_ptr<RSA, decltype(&RSA_free)> rsa(
-                EVP_PKEY_get1_RSA(evp_pkey.get()),
-                &RSA_free);
-
-        std::vector<uint8_t> cipher;
-
-        cipher.resize(RSA_size(rsa.get()));
-
-        auto cipher_size = RSA_public_encrypt(
-                static_cast<int>(data.size()),
-                data.data(),
-                cipher.data(),
-                rsa.get(),
-                RSA_PKCS1_PADDING);
-
-        if (cipher_size == -1)
-            throw std::logic_error("Unable to encrypt data.");
-
-        cipher.resize(cipher_size);
-
-        return cipher;
-    }
-
-    std::vector<uint8_t> sign(void *cert, const std::span<const uint8_t> &data) {
-
-        if (cert == nullptr) {
-            throw std::invalid_argument("Unable to sign blob. Cert is null.");
-        }
-
-        size_t sign_size{c_max_signature_size};
-
-        std::vector<uint8_t> sign_blob(sign_size);
-
-        check_ck_rv("Unable to sign blob.",
-                    pkcs11h_certificate_sign(
-                            reinterpret_cast<pkcs11h_certificate_t>(cert),
-                            CKM_SHA512_RSA_PKCS,
-                            data.data(),
-                            data.size(),
-                            sign_blob.data(),
-                            &sign_size
-                    ));
-
-        sign_blob.resize(static_cast<int>(sign_size));
-
-        return sign_blob;
     }
 
     std::vector<RSACertificateInfo> get_certificates() {
@@ -378,11 +225,5 @@ namespace PKCS11 {
         }
 
         return cert_infos;
-    }
-
-    void remove_provider(const std::u8string_view &reference) {
-        check_ck_rv("Unable to remove provider.",
-                    pkcs11h_removeProvider(
-                            reinterpret_cast<const char *>(reference.data())));
     }
 }

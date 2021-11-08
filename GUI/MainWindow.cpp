@@ -80,26 +80,25 @@ namespace GUI {
 
             const auto cert_id_bytes = ui->key_combo_box->currentData().toByteArray();
 
-            std::unique_ptr<void, decltype(&PKCS11::free_certificate)> cert(
-                    PKCS11::get_certificate(Convert::to_const_span(cert_id_bytes)),
-                    &PKCS11::free_certificate);
+            const auto certificate = PKCS11::RSACertificate::get_certificate(
+                    Convert::to_const_span(cert_id_bytes));
 
             switch (static_cast<Command>(ui->command_combo_box->currentData().toInt())) {
 
                 case Command::Password:
-                    make_password(cert.get());
+                    make_password(*certificate);
                     break;
 
                 case Command::Keyfile:
-                    make_keyfile(cert.get());
+                    make_keyfile(*certificate);
                     break;
 
                 case Command::Encrypt:
-                    encrypt(cert.get());
+                    encrypt(*certificate);
                     break;
 
                 case Command::Decrypt:
-                    decrypt(cert.get());
+                    decrypt(*certificate);
                     break;
             }
         }
@@ -126,26 +125,24 @@ namespace GUI {
                         ui->secret_line_edit->text()));
     }
 
-    void MainWindow::encrypt(void *cert) {
+    void MainWindow::encrypt(const PKCS11::RSACertificate &certificate) {
         const auto data = ui->secret_line_edit->text()
                 .trimmed()
                 .toUtf8();
 
-        auto cipher = PKCS11::encrypt(cert,
-                                      Convert::to_const_span(data));
+        auto cipher = certificate.encrypt(Convert::to_const_span(data));
 
         ui->data_plain_edit->setPlainText(
                 Convert::to_qt_byte_array(cipher).toBase64());
     }
 
-    void MainWindow::make_password(void *cert) {
+    void MainWindow::make_password(const PKCS11::RSACertificate &certificate) {
 
         const auto data = ui->source_line_edit->text()
                 .trimmed()
                 .toUtf8();
 
-        const auto sign = PKCS11::sign(
-                cert,
+        const auto sign = certificate.sign(
                 Convert::to_const_span(data));
 
         auto format = ui->format_combo_box->currentText().toLatin1();
@@ -161,27 +158,25 @@ namespace GUI {
                 QString::fromStdString(pass));
     }
 
-    void MainWindow::make_keyfile(void *cert) {
+    void MainWindow::make_keyfile(const PKCS11::RSACertificate &certificate) {
 
         const auto data = ui->source_line_edit->text()
                 .trimmed()
                 .toUtf8();
 
-        const auto sign = PKCS11::sign(
-                cert,
+        const auto sign = certificate.sign(
                 Convert::to_const_span(data));
 
         ui->data_plain_edit->setPlainText(
                 Convert::to_qt_byte_array(sign).toBase64());
     }
 
-    void MainWindow::decrypt(void *cert) {
+    void MainWindow::decrypt(const PKCS11::RSACertificate &certificate) {
 
         auto cipher = QByteArray::fromBase64(
                 ui->data_plain_edit->toPlainText().trimmed().toLatin1());
 
-        auto data = PKCS11::decrypt(
-                cert,
+        auto data = certificate.decrypt(
                 Convert::to_const_span(cipher));
 
         ui->secret_line_edit->setText(

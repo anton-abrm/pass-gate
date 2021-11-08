@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <PKCS11/RSACertificate.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,10 +28,10 @@ namespace GUI {
         void apply_provider();
         void update_certificates();
 
-        void encrypt(void * cert);
-        void decrypt(void * cert);
-        void make_keyfile(void * cert);
-        void make_password(void * cert);
+        void encrypt(const PKCS11::RSACertificate &);
+        void decrypt(const PKCS11::RSACertificate &);
+        void make_keyfile(const PKCS11::RSACertificate &);
+        void make_password(const PKCS11::RSACertificate &);
 
     private slots:
 
