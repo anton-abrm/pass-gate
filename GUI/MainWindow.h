@@ -34,6 +34,7 @@ namespace GUI {
 
         enum class EncryptionVersion {
             EncryptionV1 = 1,
+            EncryptionV2 = 2,
         };
 
         enum class EntropySourceType {

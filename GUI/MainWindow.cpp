@@ -28,6 +28,7 @@
 #include "Core/BIP39EntropySourceV2.h"
 #include "Core/RandomEntropySource.h"
 #include "Core/SignatureEntropySourceV2.h"
+#include "Core/EncryptionServiceV2.h"
 #include "Core/EncryptionServiceV1.h"
 #include "Base/Encoding.h"
 
@@ -517,6 +518,10 @@ namespace GUI {
 
         switch (version)
         {
+
+            case EncryptionVersion::EncryptionV2:
+                return std::make_unique<Core::EncryptionServiceV2>(std::move(source), g_provider, salt);
+
             case EncryptionVersion::EncryptionV1:
                 return std::make_unique<Core::EncryptionServiceV1>(std::move(source), g_provider, salt);
 
@@ -554,6 +559,14 @@ namespace GUI {
                             return;
                         }
 
+                        break;
+                    case EncryptionVersion::EncryptionV2:
+
+                        if (!ui->source_line_edit->text().isEmpty() &&
+                            !prompt_warning_yes_no("Do you really want to encrypt the secret with the salt?\n"
+                                                   "You will have to enter it upon the decryption.")) {
+                            return;
+                        }
                         break;
                 }
 
@@ -603,7 +616,7 @@ namespace GUI {
             version = static_cast<EncryptionVersion>(version_str.toInt());
 
             if (version < EncryptionVersion::EncryptionV1 ||
-                version > EncryptionVersion::EncryptionV1)
+                version > EncryptionVersion::EncryptionV2)
                     throw std::runtime_error("Invalid format.");
 
             body_base64 = sections.at(3);
@@ -1272,7 +1285,8 @@ namespace GUI {
     void MainWindow::reset_format_combo_box_for_encryption()
     {
         ui->password_format_combo_box->clear();
-        ui->password_format_combo_box->addItem("v1 (Latest)", static_cast<int>(EncryptionVersion::EncryptionV1));
+        ui->password_format_combo_box->addItem("v2 (Latest)", static_cast<int>(EncryptionVersion::EncryptionV2));
+        ui->password_format_combo_box->addItem("v1", static_cast<int>(EncryptionVersion::EncryptionV1));
         ui->password_format_combo_box->setEditable(false);
     }
 

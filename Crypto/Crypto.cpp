@@ -203,3 +203,89 @@ Base::ZBytes Crypto::compute_hkdf_hmac_sha512_expand_only(
     return result;
 }
 
+Base::ZBytes
+Crypto::encrypt_aes_256_gcm(std::span<const uint8_t> key,
+                            std::span<const uint8_t> iv,
+                            std::span<const uint8_t> plain,
+                            Base::ZBytes &tag) {
+
+    if (key.size() != c_aes_256_key_size)
+        throw std::runtime_error("Invalid AES Key size.");
+
+    std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)> ctx(
+            EVP_CIPHER_CTX_new(),
+            &EVP_CIPHER_CTX_free);
+
+    if (1 != EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_gcm(), nullptr, key.data(), iv.data()))
+        throw std::runtime_error("Unable to initialize AES 256 GCM.");
+
+    if (1 != EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_IVLEN, static_cast<int>(iv.size()), nullptr))
+        throw std::runtime_error("Unable to set iv size for AES 256 GCM.");
+
+    Base::ZBytes cipher(plain.size());
+
+    int len{0};
+
+    std::size_t output_size{0};
+
+    if(1 != EVP_EncryptUpdate(ctx.get(), cipher.data() + output_size, &len, plain.data(), static_cast<int>(plain.size())))
+        throw std::runtime_error("Unable to encrypt message for AES 256 GCM.");
+
+    output_size += len;
+
+    if(1 != EVP_EncryptFinal_ex(ctx.get(), cipher.data() + output_size, &len))
+        throw std::runtime_error("Unable to encrypt message for AES 256 GCM.");
+
+    output_size += len;
+
+    cipher.resize(output_size);
+
+    if (1 != EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_GET_TAG, static_cast<int>(tag.size()), tag.data()))
+        throw std::runtime_error("Unable to get tag for AES 256 GCM.");
+
+    return cipher;
+}
+
+Base::ZBytes
+Crypto::decrypt_aes_256_gcm(
+        std::span<const uint8_t> key,
+        std::span<const uint8_t> iv,
+        std::span<const uint8_t> cipher,
+        std::span<const uint8_t> tag) {
+
+    if (key.size() != c_aes_256_key_size)
+        throw std::runtime_error("Invalid AES Key size.");
+
+    std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)> ctx(
+            EVP_CIPHER_CTX_new(),
+            &EVP_CIPHER_CTX_free);
+
+    if(1 != EVP_DecryptInit_ex(ctx.get(), EVP_aes_256_gcm(), nullptr, key.data(), iv.data()))
+        throw std::runtime_error("Unable to initialize AES 256 GCM.");
+
+    if (1 != EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_IVLEN, static_cast<int>(iv.size()), nullptr))
+        throw std::runtime_error("Unable to set iv size for AES 256 GCM.");
+
+    if (1 != EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, static_cast<int>(tag.size()), const_cast<uint8_t *>(tag.data())))
+        throw std::runtime_error("Unable to set tag for AES 256 GCM.");
+
+    Base::ZBytes plain(cipher.size());
+
+    int len{0};
+
+    std::size_t output_size{0};
+
+    if(1 != EVP_DecryptUpdate(ctx.get(), plain.data(), &len, cipher.data(), static_cast<int>(cipher.size())))
+        throw std::runtime_error("Unable to decrypt message using AES 256 GCM.");
+
+    output_size += len;
+
+    if(1 != EVP_DecryptFinal_ex(ctx.get(), plain.data() + output_size, &len))
+        throw std::runtime_error("Unable to decrypt message using AES 256 GCM.");
+
+    output_size += len;
+
+    plain.resize(output_size);
+
+    return plain;
+}
