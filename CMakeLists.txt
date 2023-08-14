@@ -93,6 +93,8 @@ include_directories(
 )
 
 add_executable(pass-gate-tests
+        Base/Encoding.cpp
+        Tests/EncodingTests.cpp
         )
 
 target_link_libraries(pass-gate-tests
