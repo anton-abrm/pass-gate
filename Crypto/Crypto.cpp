@@ -170,3 +170,36 @@ Crypto::decrypt_aes_256_cbc(std::span<const uint8_t> key, std::span<const uint8_
 
     return plain;
 }
+
+Base::ZBytes Crypto::compute_hkdf_hmac_sha512_expand_only(
+        std::span<const uint8_t> key,
+        std::span<const uint8_t> info,
+        std::size_t key_length)
+{
+    const char * digest = SN_sha512;
+    const int mode = EVP_KDF_HKDF_MODE_EXPAND_ONLY;
+
+    OSSL_PARAM params[] = {
+            { OSSL_KDF_PARAM_MODE,   OSSL_PARAM_INTEGER,      const_cast<int *>(&mode),                 sizeof(mode),   0 },
+            { OSSL_KDF_PARAM_DIGEST, OSSL_PARAM_UTF8_STRING,  const_cast<char *>(digest),               strlen(digest), 0 },
+            { OSSL_KDF_PARAM_KEY,    OSSL_PARAM_OCTET_STRING, const_cast<unsigned char *>(key.data()),  key.size(),     0 },
+            { OSSL_KDF_PARAM_INFO,   OSSL_PARAM_OCTET_STRING, const_cast<unsigned char *>(info.data()), info.size(),    0 },
+            { nullptr,               0,                       nullptr,                                  0,              0 }
+    };
+
+    std::unique_ptr<EVP_KDF, decltype(&EVP_KDF_free)> kdf(
+            EVP_KDF_fetch(nullptr, OSSL_KDF_NAME_HKDF, nullptr),
+            &EVP_KDF_free);
+
+    std::unique_ptr<EVP_KDF_CTX, decltype(&EVP_KDF_CTX_free)> kdf_ctx(
+            EVP_KDF_CTX_new(kdf.get()),
+            &EVP_KDF_CTX_free);
+
+    Base::ZBytes result(key_length);
+
+    if (EVP_KDF_derive(kdf_ctx.get(), result.data(), key_length, params) != 1)
+        throw std::logic_error("Unable to compute KDF.");
+
+    return result;
+}
+

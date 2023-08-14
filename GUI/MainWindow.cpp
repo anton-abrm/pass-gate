@@ -25,6 +25,7 @@
 #include "Validation/Validation.h"
 
 #include "Core/BIP39EntropySource.h"
+#include "Core/BIP39EntropySourceV2.h"
 #include "Core/RandomEntropySource.h"
 #include "Core/SignatureEntropySourceV2.h"
 #include "Core/EncryptionServiceV1.h"
@@ -313,6 +314,10 @@ namespace GUI {
                 {
                     case BIP39Version::BIP39V1:
                         entropy->source = std::make_unique<Core::BIP39EntropySource>(mnemonic);
+                        break;
+
+                    case BIP39Version::BIP39V2:
+                        entropy->source = std::make_unique<Core::BIP39EntropySourceV2>(mnemonic, info);
                         break;
                 }
 
@@ -1316,7 +1321,8 @@ namespace GUI {
     void MainWindow::reset_format_combo_box_for_bip39()
     {
         ui->entropy_format_combo_box->clear();
-        ui->entropy_format_combo_box->addItem("v1 (Latest)", static_cast<int>(BIP39Version::BIP39V1));
+        ui->entropy_format_combo_box->addItem("v2 (Latest)", static_cast<int>(BIP39Version::BIP39V2));
+        ui->entropy_format_combo_box->addItem("v1", static_cast<int>(BIP39Version::BIP39V1));
     }
 
     void MainWindow::reset_format_combo_box_for_random()

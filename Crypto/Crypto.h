@@ -31,6 +31,11 @@ namespace Crypto {
             std::span<const uint8_t> info,
             std::size_t key_length);
 
+    Base::ZBytes compute_hkdf_hmac_sha512_expand_only(
+            std::span<const uint8_t> key,
+            std::span<const uint8_t> info,
+            std::size_t key_length);
+
     Base::ZBytes encrypt_aes_256_cbc(
             std::span<const uint8_t> key,
             std::span<const uint8_t> iv,
