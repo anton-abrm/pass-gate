@@ -16,6 +16,8 @@
 
 #include <GUI/PinDialog.h>
 #include <PKI/PKCS11Provider.h>
+#include <PKI/PKCS12Provider.h>
+#include <PKI/PEMProvider.h>
 #include <Password/Password.h>
 #include <Keyboard/Keyboard.h>
 #include <BIP39/BIP39.h>
@@ -685,6 +687,15 @@ namespace GUI {
     }
 
     static std::shared_ptr<Core::PKIProvider> get_provider(const QString& provider_path) {
+
+        if (provider_path.endsWith(".pem", Qt::CaseSensitivity::CaseInsensitive) ||
+            provider_path.endsWith(".pk8", Qt::CaseSensitivity::CaseInsensitive))
+                return PKI::PEMProvider::instance();
+
+        if (provider_path.endsWith(".pfx", Qt::CaseSensitivity::CaseInsensitive) ||
+            provider_path.endsWith(".p12", Qt::CaseSensitivity::CaseInsensitive))
+                return PKI::PKCS12Provider::instance();
+
         return PKI::PKCS11Provider::instance();
     }
 

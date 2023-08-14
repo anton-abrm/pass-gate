@@ -44,7 +44,10 @@ add_executable(pass-gate
         GUI/PinDialog.ui
         Keyboard/Keyboard.cpp
         Main.cpp
+        PKI/PEMProvider.cpp
         PKI/PKCS11Provider.cpp
+        PKI/PKCS12Provider.cpp
+        PKI/PKIContainer.cpp
         Password/Password.cpp
         Validation/Validation.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/GitEnv.cpp
