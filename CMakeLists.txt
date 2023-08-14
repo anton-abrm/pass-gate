@@ -31,6 +31,7 @@ add_executable(pass-gate
         Core/BIP39EntropySourceV2.cpp
         Core/EncryptionService.cpp
         Core/EncryptionServiceV1.cpp
+        Core/EncryptionServiceV2.cpp
         Core/EntropySource.cpp
         Core/EntropySource.cpp
         Core/PKIProvider.cpp
