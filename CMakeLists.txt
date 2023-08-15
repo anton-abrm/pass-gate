@@ -25,6 +25,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 add_executable(pass-gate
+        ${CMAKE_CURRENT_BINARY_DIR}/GitEnv.cpp
         BIP39/BIP39.cpp
         Base/Encoding.cpp
         Core/BIP39EntropySource.cpp
@@ -50,9 +51,11 @@ add_executable(pass-gate
         PKI/PKCS11Provider.cpp
         PKI/PKCS12Provider.cpp
         PKI/PKIContainer.cpp
+        PKI/HostRandomNumberGenerator.cpp
         Password/Password.cpp
         Validation/Validation.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/GitEnv.cpp
+
+
 )
 
 target_link_libraries(pass-gate

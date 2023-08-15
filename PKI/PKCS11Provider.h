@@ -13,7 +13,8 @@
 
 namespace PKI {
 
-class PKCS11Provider final : virtual public Core::PKIProvider {
+class PKCS11Provider final : virtual public Core::PKIProvider,
+                             virtual public Core::RandomNumberGenerator {
 
 private:
     PKCS11Provider();

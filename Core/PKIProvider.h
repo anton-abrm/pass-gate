@@ -13,7 +13,7 @@
 
 namespace Core {
 
-class PKIProvider : virtual public Core::RandomNumberGenerator
+class PKIProvider
 {
 
 protected:

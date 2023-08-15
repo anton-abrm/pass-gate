@@ -93,16 +93,6 @@ std::vector<Core::PublicKeyInfo> PKI::PKIContainer::get_certificates() const
     return cert_infos;
 }
 
-Base::ZBytes PKI::PKIContainer::generate_random(std::size_t length) const
-{
-    Base::ZBytes result(length);
-
-    if (1 != RAND_bytes(result.data(), static_cast<int>(length)))
-        throw std::runtime_error("Unable to generate random.");
-
-    return result;
-}
-
 Base::ZBytes PKI::PKIContainer::sign(std::span<const uint8_t> id, std::span<const uint8_t> data) const
 {
     if (!m_private_key)

@@ -17,6 +17,7 @@
 #include <GUI/PinDialog.h>
 #include <PKI/PKCS11Provider.h>
 #include <PKI/PKCS12Provider.h>
+#include <PKI/HostRandomNumberGenerator.h>
 #include <PKI/PEMProvider.h>
 #include <Password/Password.h>
 #include <Keyboard/Keyboard.h>
@@ -51,6 +52,7 @@ static const QString c_select_provider_dialog_filter = "PKCS (*.so *.pem *.pk8 *
 static const std::size_t c_output_kcv_size = 4;
 
 static std::shared_ptr<Core::PKIProvider> g_provider = PKI::PKCS11Provider::instance();
+static std::shared_ptr<Core::RandomNumberGenerator> g_rnd = PKI::PKCS11Provider::instance();
 
 static QString g_secret_path;
 
@@ -289,7 +291,7 @@ namespace GUI {
             case EntropySourceType::Random:
             {
                 entropy->entropy_id = "rand";
-                entropy->source = std::make_unique<Core::RandomEntropySource>(g_provider);
+                entropy->source = std::make_unique<Core::RandomEntropySource>(g_rnd);
                 break;
             }
 
@@ -520,10 +522,10 @@ namespace GUI {
         {
 
             case EncryptionVersion::EncryptionV2:
-                return std::make_unique<Core::EncryptionServiceV2>(std::move(source), g_provider, salt);
+                return std::make_unique<Core::EncryptionServiceV2>(std::move(source), g_rnd, salt);
 
             case EncryptionVersion::EncryptionV1:
-                return std::make_unique<Core::EncryptionServiceV1>(std::move(source), g_provider, salt);
+                return std::make_unique<Core::EncryptionServiceV1>(std::move(source), g_rnd, salt);
 
             default:
                 throw std::invalid_argument("version is out of range");
@@ -734,6 +736,10 @@ namespace GUI {
 
                 g_provider = get_provider(provider_path);
 
+                g_rnd = std::dynamic_pointer_cast<Core::RandomNumberGenerator>(g_provider)
+                    ? std::dynamic_pointer_cast<Core::RandomNumberGenerator>(g_provider)
+                    : PKI::HostRandomNumberGenerator::instance();
+
                 g_provider->set_pin_callback([this](std::string &pin) -> bool {
 
                     PinDialog dlg(this);
@@ -753,6 +759,7 @@ namespace GUI {
                 });
 
                 g_provider->initialize(provider_path.toStdString());
+
             }
             catch (const std::exception &ex) {
                 QMessageBox::warning(this, "Error", ex.what());
