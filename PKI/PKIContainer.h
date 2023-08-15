@@ -14,8 +14,6 @@ namespace PKI
 
         Base::ZBytes sign(std::span<const uint8_t> id, std::span<const uint8_t> data) const override;
 
-        Base::ZBytes generate_random(std::size_t length) const override;
-
         void terminate() override;
 
         std::vector<Core::PublicKeyInfo> get_certificates() const override;
