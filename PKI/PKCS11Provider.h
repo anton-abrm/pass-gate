@@ -28,7 +28,7 @@ public:
     std::vector<Core::PublicKeyInfo> get_certificates() const override;
     bool is_initialized() const override;
 
-    Base::ZBytes generate_random(std::size_t length) const override;
+    void generate_random(std::span<uint8_t>) override;
 
     Base::ZBytes sign(std::span<const uint8_t> id, std::span<const uint8_t> data) const override;
 

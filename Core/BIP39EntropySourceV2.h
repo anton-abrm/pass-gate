@@ -11,7 +11,7 @@ namespace Core
     public:
         explicit BIP39EntropySourceV2(std::string_view mnemonic, std::string_view info);
 
-        [[nodiscard]] Base::ZBytes get_seed(std::string_view nonce, std::size_t size) const override;
+        [[nodiscard]] Base::ZBytes get_seed(std::string_view nonce, std::size_t size) override;
         [[nodiscard]] std::size_t max_seed_size() const override;
 
     private:

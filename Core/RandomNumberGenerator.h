@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 
 #include "Base/ZVector.h"
 
@@ -8,8 +9,8 @@ namespace Core
     class RandomNumberGenerator
     {
     public:
-        [[nodiscard]]
-        virtual Base::ZBytes generate_random(std::size_t length) const = 0;
+
+        virtual void generate_random(std::span<uint8_t> out) = 0;
 
         virtual ~RandomNumberGenerator();
     };

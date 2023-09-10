@@ -48,7 +48,9 @@ namespace GUI {
             Decrypt,
             Keyfile,
             Password,
-            Mnemonic
+            Mnemonic,
+            Split,
+            Recombine,
         };
 
         typedef struct {
@@ -75,6 +77,8 @@ namespace GUI {
         void make_password();
         void make_mnemonic();
         void format_password();
+        void split();
+        void recombine();
 
         void show_secret();
         void hide_secret();
@@ -90,6 +94,7 @@ namespace GUI {
         void reset_format_combo_box_for_mnemonic();
         void reset_format_combo_box_for_encryption();
         void reset_format_combo_box_for_decryption();
+        void reset_format_combo_box_for_split_recombine();
 
         void reset_format_combo_box_for_signature();
         void reset_format_combo_box_for_bip39();

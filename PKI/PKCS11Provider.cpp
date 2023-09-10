@@ -290,20 +290,6 @@ namespace PKI {
         return cert_infos;
     }
 
-    Base::ZBytes PKCS11Provider::generate_random(std::size_t length) const {
-
-        if (g_provider.empty())
-            throw std::runtime_error("Provider is not set");
-
-        Base::ZBytes result(length);
-
-        if (generate_random_internal(reinterpret_cast<const char *>(g_provider.c_str()), 0, result.data(), result.size()) != 0) {
-            throw std::runtime_error("Unable to generate random");
-        }
-
-        return result;
-    }
-
     Base::ZBytes PKCS11Provider::sign(std::span<const uint8_t> id, std::span<const uint8_t> data) const
     {
         pkcs11h_certificate_id_list_t cert_ids{nullptr};
@@ -374,6 +360,16 @@ namespace PKI {
 
     bool PKCS11Provider::is_initialized() const {
         return m_initialized;
+    }
+
+    void PKCS11Provider::generate_random(std::span<uint8_t> span) {
+
+        if (g_provider.empty())
+            throw std::runtime_error("Provider is not set");
+
+        if (generate_random_internal(reinterpret_cast<const char *>(g_provider.c_str()), 0, span.data(), span.size()) != 0) {
+            throw std::runtime_error("Unable to generate random");
+        }
     }
 
     PKCS11Provider::PKCS11Provider() = default;

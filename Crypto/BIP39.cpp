@@ -6,7 +6,7 @@
 #include <codecvt>
 #include <locale>
 
-#include <Crypto/Crypto.h>
+#include "Crypto.h"
 
 static constexpr const char *c_wordlist = R"(
 abandon

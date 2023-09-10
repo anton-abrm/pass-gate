@@ -26,7 +26,7 @@ find_package(OpenSSL REQUIRED)
 
 add_executable(pass-gate
         ${CMAKE_CURRENT_BINARY_DIR}/GitEnv.cpp
-        BIP39/BIP39.cpp
+        Crypto/BIP39.cpp
         Base/Encoding.cpp
         Core/BIP39EntropySource.cpp
         Core/BIP39EntropySourceV2.cpp
@@ -54,8 +54,11 @@ add_executable(pass-gate
         PKI/HostRandomNumberGenerator.cpp
         Password/Password.cpp
         Validation/Validation.cpp
-
-
+        Crypto/SLIP39.cpp
+        Crypto/GF256.cpp
+        Crypto/Shamir.cpp
+        Core/BufferedRandomNumberGenerator.cpp
+        Core/BufferedRandomNumberGenerator.h
 )
 
 target_link_libraries(pass-gate
@@ -102,7 +105,19 @@ include_directories(
 
 add_executable(pass-gate-tests
         Base/Encoding.cpp
+        Core/RandomNumberGenerator.cpp
+        Core/BufferedRandomNumberGenerator.cpp
+        Crypto/Crypto.cpp
+        Crypto/SLIP39.cpp
+        Crypto/GF256.cpp
+        Crypto/Shamir.cpp
+        Password/Password.cpp
         Tests/EncodingTests.cpp
+        Tests/SLIP39Tests.cpp
+        Tests/GF256Tests.cpp
+        Tests/ShamirTests.cpp
+        Tests/BufferedRandomNumberGeneratorTests.cpp
+        Tests/PasswordTests.cpp
         )
 
 target_link_libraries(pass-gate-tests

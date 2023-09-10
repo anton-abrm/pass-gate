@@ -12,12 +12,12 @@ namespace Core
 
     public:
 
-        explicit RandomEntropySource(std::shared_ptr<const Core::RandomNumberGenerator> rng);
+        explicit RandomEntropySource(std::shared_ptr<Core::RandomNumberGenerator> rng);
 
-        [[nodiscard]] Base::ZBytes get_seed(std::string_view nonce, std::size_t size) const override;
+        [[nodiscard]] Base::ZBytes get_seed(std::string_view nonce, std::size_t size) override;
         [[nodiscard]] std::size_t max_seed_size() const override;
 
     private:
-        const std::shared_ptr<const Core::RandomNumberGenerator> m_rng;
+        const std::shared_ptr<Core::RandomNumberGenerator> m_rng;
     };
 }

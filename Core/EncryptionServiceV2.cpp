@@ -14,7 +14,9 @@ static constexpr const std::size_t c_aes_gcm_tag_size = 16;
 Base::ZBytes Core::EncryptionServiceV2::encrypt(
         std::string_view plain) const
 {
-    const auto nonce = m_rng->generate_random(c_sign_nonce_size);
+    Base::ZBytes nonce(c_sign_nonce_size);
+
+    m_rng->generate_random(nonce);
 
     const auto nonce_string = Base::Encoding::encode_base64_url_no_padding(nonce).append(m_salt);
 
@@ -46,8 +48,8 @@ Base::ZBytes Core::EncryptionServiceV2::encrypt(
 }
 
 Core::EncryptionServiceV2::EncryptionServiceV2(
-        std::shared_ptr<const Core::EntropySource> entropy_source,
-        std::shared_ptr<const Core::RandomNumberGenerator> rng,
+        std::shared_ptr<Core::EntropySource> entropy_source,
+        std::shared_ptr<Core::RandomNumberGenerator> rng,
         std::string_view salt)
         : m_entropy_source{std::move(entropy_source)},
           m_rng {std::move(rng)},

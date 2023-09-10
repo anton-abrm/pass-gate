@@ -1,12 +1,12 @@
 #include "BIP39EntropySource.h"
-#include "BIP39/BIP39.h"
+#include "Crypto/BIP39.h"
 
 Core::BIP39EntropySource::BIP39EntropySource(std::string_view mnemonic)
     : m_mnemonic{ mnemonic }
 {
 }
 
-Base::ZBytes Core::BIP39EntropySource::get_seed(std::string_view nonce, const std::size_t size) const
+Base::ZBytes Core::BIP39EntropySource::get_seed(std::string_view nonce, const std::size_t size)
 {
     if (size > BIP39::seed_size)
         throw std::invalid_argument("The size of the requested bytes is too large.");

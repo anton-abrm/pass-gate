@@ -14,7 +14,7 @@ public:
             std::span<const uint8_t> id,
             std::string_view info);
 
-    [[nodiscard]] Base::ZBytes get_seed(std::string_view nonce, std::size_t size) const override;
+    [[nodiscard]] Base::ZBytes get_seed(std::string_view nonce, std::size_t size) override;
     [[nodiscard]] std::size_t max_seed_size() const override;
 
 private:

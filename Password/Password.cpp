@@ -1,10 +1,12 @@
 #include "Password.h"
 
+#include <algorithm>
 #include <vector>
 #include <charconv>
 #include <string_view>
 #include <stdexcept>
 #include <cmath>
+#include <map>
 
 static constexpr const char *c_alphabet_upper_all = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 static constexpr const char *c_alphabet_upper_human = "ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -16,6 +18,24 @@ static constexpr const char *c_alphabet_special_all = "!\"#$%&'()*+,-./:;<=>?@[\
 static constexpr const char *c_alphabet_special_human = "!#$%&()*+/<>?@[\\]^{}~";
 static constexpr const char *c_alphabet_special_safe = "!#$%&*@^";
 static constexpr const char *c_alphabet_hex = "0123456789abcdef";
+
+static const std::string c_hhhs = std::string(c_alphabet_upper_human)
+                                + std::string(c_alphabet_lower_human)
+                                + std::string(c_alphabet_digit_human)
+                                + std::string(c_alphabet_special_safe);
+
+static std::map<char, uint8_t> generate_hhhs_lookup() {
+
+    std::map<char, uint8_t> result;
+
+    for (std::size_t i = 0; i < c_hhhs.length(); ++i) {
+        result[c_hhhs[i]] = i;
+    }
+
+    return result;
+}
+
+static std::map<char, uint8_t> c_hhhs_lookup = generate_hhhs_lookup();
 
 enum class PasswordType {
     Chars,
@@ -190,8 +210,6 @@ static std::string merge_alphabets(const std::vector<std::string_view> &alphabet
     return merged_alphabet;
 }
 
-
-
 namespace Password {
 
     Base::ZString generate(std::string_view format, const std::function<int16_t()> &rng) {
@@ -274,5 +292,82 @@ namespace Password {
 
         return static_cast<size_t>(std::round(1.442695 * std::log(
                 std::pow(static_cast<double>(merged_alphabet.size()), password_length))));
+    }
+
+    bool is_hhhs(std::string_view s) {
+        return std::all_of(s.cbegin(), s.cend(), [](const auto c) {
+            return c_hhhs_lookup.contains(c);
+        });
+    }
+
+    Base::ZString encode_hhhs(std::span<const uint8_t> bytes) {
+
+        Base::ZString output;
+
+        output.reserve(
+                bytes.size() / 3 * 4 +
+                bytes.size() % 3 + 1);
+
+        std::span<uint8_t>::size_type i = 0;
+
+        for (; i < bytes.size() / 3 * 3; i += 3) {
+            output.push_back(c_hhhs[(bytes[i]) >> 2]);
+            output.push_back(c_hhhs[(bytes[i] & 0x03) << 4 | bytes[i + 1] >> 4]);
+            output.push_back(c_hhhs[(bytes[i + 1] & 0x0F) << 2 | bytes[i + 2] >> 6]);
+            output.push_back(c_hhhs[(bytes[i + 2] & 0x3F)]);
+        }
+
+        if (bytes.size() % 3 == 2) {
+            output.push_back(c_hhhs[(bytes[i]) >> 2]);
+            output.push_back(c_hhhs[(bytes[i] & 0x03) << 4 | bytes[i + 1] >> 4]);
+            output.push_back(c_hhhs[(bytes[i + 1] & 0x0F) << 2]);
+            return output;
+        }
+
+        if (bytes.size() % 3 == 1) {
+            output.push_back(c_hhhs[(bytes[i]) >> 2]);
+            output.push_back(c_hhhs[(bytes[i] & 0x03) << 4]);
+            return output;
+        }
+
+        return output;
+    }
+
+    std::optional<Base::ZBytes> decode_hhhs(std::string_view s) {
+
+        if (s.empty())
+            return {};
+
+        if (s.size() % 4 == 1 || !is_hhhs(s))
+            return std::nullopt;
+
+        Base::ZBytes::size_type output_size =
+                s.size() / 4 * 3 +
+                s.size() % 4 - 1;
+
+        Base::ZBytes output;
+
+        output.reserve(output_size);
+
+        std::string_view::size_type i = 0;
+
+        for (; i < s.size() / 4 * 4; i += 4) {
+            output.push_back(c_hhhs_lookup.at(s[i]) << 2 | c_hhhs_lookup.at(s[i + 1]) >> 4);
+            output.push_back(c_hhhs_lookup.at(s[i + 1]) << 4 | c_hhhs_lookup.at(s[i + 2]) >> 2);
+            output.push_back(c_hhhs_lookup.at(s[i + 2]) << 6 | c_hhhs_lookup.at(s[i + 3]));
+        }
+
+        if (s.size() % 4 == 3) {
+            output.push_back(c_hhhs_lookup.at(s[i]) << 2 | c_hhhs_lookup.at(s[i + 1]) >> 4);
+            output.push_back(c_hhhs_lookup.at(s[i + 1]) << 4 | c_hhhs_lookup.at(s[i + 2]) >> 2);
+            return output;
+        }
+
+        if (s.size() % 4 == 2) {
+            output.push_back(c_hhhs_lookup.at(s[i]) << 2 | c_hhhs_lookup.at(s[i + 1]) >> 4);
+            return output;
+        }
+
+        return output;
     }
 }
