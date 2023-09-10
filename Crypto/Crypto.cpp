@@ -58,6 +58,38 @@ Crypto::compute_pbkdf2_hmac_sha512(std::span<const uint8_t> password,
     return result;
 }
 
+Base::ZBytes
+Crypto::compute_pbkdf2_hmac_sha256(std::span<const uint8_t> password,
+                                   std::span<const uint8_t> salt,
+                                   const std::size_t iteration_count,
+                                   const std::size_t key_length) {
+
+    const std::string_view digest = SN_sha256;
+
+    OSSL_PARAM params[] = {
+            { OSSL_KDF_PARAM_PASSWORD, OSSL_PARAM_OCTET_STRING, const_cast<unsigned char *>(password.data()), password.size(), 0},
+            { OSSL_KDF_PARAM_SALT, OSSL_PARAM_OCTET_STRING, const_cast<unsigned char *>(salt.data()), salt.size(), 0 },
+            { OSSL_KDF_PARAM_ITER, OSSL_PARAM_UNSIGNED_INTEGER, const_cast<size_t *>(&iteration_count), sizeof(iteration_count), 0 },
+            { OSSL_KDF_PARAM_DIGEST, OSSL_PARAM_UTF8_STRING, const_cast<char *>(digest.data()), digest.size(), 0 },
+            { nullptr, 0, nullptr, 0, 0 }
+    };
+
+    std::unique_ptr<EVP_KDF, decltype(&EVP_KDF_free)> kdf(
+            EVP_KDF_fetch(nullptr, OSSL_KDF_NAME_PBKDF2, nullptr),
+            &EVP_KDF_free);
+
+    std::unique_ptr<EVP_KDF_CTX, decltype(&EVP_KDF_CTX_free)> kdf_ctx(
+            EVP_KDF_CTX_new(kdf.get()),
+            &EVP_KDF_CTX_free);
+
+    Base::ZBytes result(key_length);
+
+    if (EVP_KDF_derive(kdf_ctx.get(), result.data(), key_length, params) < 0)
+        throw std::runtime_error("Unable to compute KDF");
+
+    return result;
+}
+
 Base::ZBytes Crypto::compute_hkdf_hmac_sha512(std::span<const uint8_t> key,
                                                       std::span<const uint8_t> salt,
                                                       std::span<const uint8_t> info,

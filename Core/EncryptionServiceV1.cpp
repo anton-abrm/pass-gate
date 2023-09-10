@@ -3,8 +3,8 @@
 #include "Crypto/Crypto.h"
 
 Core::EncryptionServiceV1::EncryptionServiceV1(
-        std::shared_ptr<const Core::EntropySource> entropy_source,
-        std::shared_ptr<const Core::RandomNumberGenerator> rng,
+        std::shared_ptr<Core::EntropySource> entropy_source,
+        std::shared_ptr<Core::RandomNumberGenerator> rng,
         std::string_view passphrase)
         : m_entropy_source{std::move(entropy_source)},
           m_rng {std::move(rng)},

@@ -21,7 +21,7 @@
 #include <PKI/PEMProvider.h>
 #include <Password/Password.h>
 #include <Keyboard/Keyboard.h>
-#include <BIP39/BIP39.h>
+#include "Crypto/BIP39.h"
 #include <Crypto/Crypto.h>
 #include "Validation/Validation.h"
 
@@ -32,6 +32,9 @@
 #include "Core/EncryptionServiceV2.h"
 #include "Core/EncryptionServiceV1.h"
 #include "Base/Encoding.h"
+#include "Crypto/Shamir.h"
+#include "Crypto/SLIP39.h"
+#include "Core/BufferedRandomNumberGenerator.h"
 
 #include <Version.h>
 
@@ -55,6 +58,39 @@ static std::shared_ptr<Core::PKIProvider> g_provider = PKI::PKCS11Provider::inst
 static std::shared_ptr<Core::RandomNumberGenerator> g_rnd = PKI::PKCS11Provider::instance();
 
 static QString g_secret_path;
+
+static std::optional<std::tuple<uint8_t, uint8_t>> parse_m_n(const QString &value) {
+
+    const auto parts = value.split('/');
+
+    if (parts.size() != 2)
+        return std::nullopt;
+
+    bool ok {false};
+
+    uint m = parts[0].trimmed().toUInt(&ok);
+
+    if (!ok)
+        return  std::nullopt;
+
+    uint n = parts[1].trimmed().toUInt(&ok);
+
+    if (!ok)
+        return std::nullopt;
+
+    if (m == 0 ||
+        n == 0 ||
+        m > std::numeric_limits<uint8_t>::max() ||
+        n > std::numeric_limits<uint8_t>::max() ||
+        m > n){
+            return std::nullopt;
+    }
+
+    return std::tuple<uint8_t, uint8_t>(
+        static_cast<uint8_t>(m),
+        static_cast<uint8_t>(n)
+    );
+}
 
 static QString convert_password_to_readable_form(QString password)
 {
@@ -148,6 +184,8 @@ namespace GUI {
         ui->command_combo_box->addItem("Mnemonic", static_cast<int>(Command::Mnemonic));
         ui->command_combo_box->addItem("Encrypt", static_cast<int>(Command::Encrypt));
         ui->command_combo_box->addItem("Decrypt", static_cast<int>(Command::Decrypt));
+        ui->command_combo_box->addItem("Split", static_cast<int>(Command::Split));
+        ui->command_combo_box->addItem("Recombine", static_cast<int>(Command::Recombine));
 
         ui->entropy_type_combo_box->addItem("Signature", static_cast<int>(EntropySourceType::Signature));
         ui->entropy_type_combo_box->addItem("BIP39", static_cast<int>(EntropySourceType::BIP39));
@@ -213,6 +251,14 @@ namespace GUI {
 
                 case Command::Mnemonic:
                     make_mnemonic();
+                    break;
+
+                case Command::Split:
+                    split();
+                    break;
+
+                case Command::Recombine:
+                    recombine();
                     break;
             }
 
@@ -283,6 +329,10 @@ namespace GUI {
 
             case Command::Mnemonic:
                 info = "mnemonic";
+                break;
+
+            case Command::Split:
+            case Command::Recombine:
                 break;
         }
 
@@ -968,8 +1018,25 @@ namespace GUI {
         static std::optional<Command> last_command;
         static std::map<Command, QString> last_values;
 
-        if (last_command)
-            last_values[last_command.value()] = ui->password_format_combo_box->currentText();
+        if (last_command) {
+
+            switch (last_command.value()) {
+
+                case Command::Encrypt:
+                case Command::Decrypt:
+                case Command::Keyfile:
+                case Command::Password:
+                case Command::Mnemonic:
+                    last_values[last_command.value()] = ui->password_format_combo_box->currentText();
+                    break;
+
+                case Command::Split:
+                case Command::Recombine:
+                    last_values[Command::Split] = ui->password_format_combo_box->currentText();
+                    last_values[Command::Recombine] = ui->password_format_combo_box->currentText();
+                    break;
+            }
+        }
 
         const auto command = this->current_command();
 
@@ -993,6 +1060,11 @@ namespace GUI {
 
             case Command::Decrypt:
                 reset_format_combo_box_for_decryption();
+                break;
+
+            case Command::Split:
+            case Command::Recombine:
+                reset_format_combo_box_for_split_recombine();
                 break;
         }
 
@@ -1267,6 +1339,16 @@ namespace GUI {
         ui->password_format_combo_box->setEditable(true);
     }
 
+    void MainWindow::reset_format_combo_box_for_split_recombine() {
+        ui->password_format_combo_box->clear();
+
+        ui->password_format_combo_box->addItem("2/3");
+        ui->password_format_combo_box->addItem("3/5");
+
+        ui->password_format_combo_box->setEditable(true);
+    }
+
+
     void MainWindow::reset_format_combo_box_for_keyfile()
     {
         ui->password_format_combo_box->clear();
@@ -1285,6 +1367,7 @@ namespace GUI {
         ui->password_format_combo_box->addItem("128 bit", 16);
         ui->password_format_combo_box->addItem("92 bit", 12);
         ui->password_format_combo_box->addItem("64 bit", 8);
+        ui->password_format_combo_box->addItem("32 bit", 4);
 
         ui->password_format_combo_box->setEditable(false);
     }
@@ -1381,5 +1464,114 @@ namespace GUI {
             ui->entropy_format_combo_box->setCurrentText(last_values[entropy_type]);
 
         last_entropy_type = entropy_type;
+    }
+
+    void MainWindow::split() {
+
+        const auto salt = ui->source_line_edit->text().toStdString();
+
+        const auto password = convert_password_to_original_from(
+                ui->secret_line_edit->text()).toStdString();
+
+        const bool is_hhhs = Password::is_hhhs(password);
+
+        const auto secret = is_hhhs
+                ? Password::decode_hhhs(password)
+                : BIP39::mnemonic_to_entropy(password);
+
+        if (!secret || secret.value().size() % 2 != 0)
+            throw std::runtime_error("Unable to split secret.");
+
+        const auto encrypted_secret = SLIP39::encrypt_master_secret(secret.value(), 0, 0, salt);
+
+        const auto m_n = parse_m_n(ui->password_format_combo_box->currentText());
+
+        if (!m_n)
+            throw std::runtime_error("Invalid format.");
+
+        const auto [m,n] = m_n.value();
+
+        const auto entropy_ctx = create_entropy_context();
+
+        Core::BufferedRandomNumberGenerator rng(g_rnd, encrypted_secret.size() * (m - 1));
+
+        const auto shares = Shamir::create_shares(rng, encrypted_secret, m, n);
+
+        ui->data_plain_edit->clear();
+
+        for (const auto &[id, share] : shares) {
+
+            QString text;
+
+            text += QString::number(id);
+            text += ". ";
+
+            if (is_hhhs) {
+                const auto encoded = Password::encode_hhhs(share);
+                text += convert_password_to_readable_form(
+                        QString::fromUtf8(encoded.data(), static_cast<int>(encoded.size())));
+            }
+            else {
+                const auto mnemonic = BIP39::entropy_to_mnemonic(share).value();
+                text += QString::fromUtf8(mnemonic.data(), static_cast<int>(mnemonic.size()));
+            }
+
+            text += "\n";
+
+            ui->data_plain_edit->appendPlainText(text);
+        }
+    }
+
+    void MainWindow::recombine() {
+
+        const auto salt = ui->source_line_edit->text().toStdString();
+
+        auto lines = ui->data_plain_edit->toPlainText().split('\n', Qt::SplitBehaviorFlags::SkipEmptyParts);
+
+        if (lines.isEmpty())
+            return;
+
+        std::map<uint8_t, Base::ZBytes> shares;
+
+        std::optional<bool> is_hhhs_opt;
+
+        for (const auto& line: lines) {
+
+            auto parts = line.split('.', Qt::SplitBehaviorFlags::SkipEmptyParts);
+
+            const auto id = static_cast<uint8_t>(parts[0].trimmed().toInt());
+
+            const auto body = convert_password_to_original_from(parts[1].trimmed()).toStdString();
+
+            if (is_hhhs_opt == std::nullopt) {
+                is_hhhs_opt = Password::is_hhhs(body);
+            }
+
+            const auto entropy = is_hhhs_opt.value()
+                    ? Password::decode_hhhs(body)
+                    : BIP39::mnemonic_to_entropy(body);
+
+            if (!entropy)
+                throw std::runtime_error("Unable to recombine shares.");
+
+            shares[id] = entropy.value();
+        }
+
+        const auto m_n = parse_m_n(ui->password_format_combo_box->currentText());
+
+        if (!m_n)
+            throw std::runtime_error("Invalid format.");
+
+        const auto [m,n] = m_n.value();
+
+        const auto encrypted_secret = Shamir::recombine_shares(shares, m);
+
+        const auto secret_bytes = SLIP39::decrypt_master_secret(encrypted_secret, 0, 0, salt);
+
+        const auto secret = is_hhhs_opt.value()
+                ? Password::encode_hhhs(secret_bytes)
+                : BIP39::entropy_to_mnemonic(secret_bytes).value();
+
+        ui->secret_line_edit->setText(QString::fromUtf8(secret.data(), static_cast<int>(secret.size())));
     }
 }

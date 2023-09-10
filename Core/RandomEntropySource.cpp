@@ -2,12 +2,14 @@
 
 #include <limits>
 
-Base::ZBytes Core::RandomEntropySource::get_seed(std::string_view nonce, const std::size_t size) const
+Base::ZBytes Core::RandomEntropySource::get_seed(std::string_view nonce, const std::size_t size)
 {
-    return m_rng->generate_random(size);
+    Base::ZBytes result(size);
+    m_rng->generate_random(result);
+    return result;
 }
 
-Core::RandomEntropySource::RandomEntropySource(std::shared_ptr<const Core::RandomNumberGenerator> rng)
+Core::RandomEntropySource::RandomEntropySource(std::shared_ptr<Core::RandomNumberGenerator> rng)
    : m_rng {std::move(rng)}
 {
     if (!m_rng)

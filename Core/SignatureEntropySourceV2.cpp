@@ -5,7 +5,7 @@
 
 #include "Crypto/Crypto.h"
 
-Base::ZBytes Core::SignatureEntropySourceV2::get_seed(std::string_view nonce, std::size_t size) const
+Base::ZBytes Core::SignatureEntropySourceV2::get_seed(std::string_view nonce, std::size_t size)
 {
     const auto sign = m_provider->sign(
             m_id, { reinterpret_cast<const uint8_t *>(nonce.data()), nonce.size() });

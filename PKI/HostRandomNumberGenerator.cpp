@@ -2,20 +2,17 @@
 
 #include <openssl/rand.h>
 
-Base::ZBytes PKI::HostRandomNumberGenerator::generate_random(std::size_t length) const
-{
-    Base::ZBytes result(length);
 
-    if (1 != RAND_bytes(result.data(), static_cast<int>(length)))
-        throw std::runtime_error("Unable to generate random.");
-
-    return result;
-}
 
 std::shared_ptr<PKI::HostRandomNumberGenerator> PKI::HostRandomNumberGenerator::instance() {
     static std::shared_ptr<HostRandomNumberGenerator> instance { new HostRandomNumberGenerator() };
 
     return instance;
+}
+
+void PKI::HostRandomNumberGenerator::generate_random(std::span<uint8_t> out) {
+    if (1 != RAND_bytes(out.data(), static_cast<int>(out.size())))
+        throw std::runtime_error("Unable to generate random.");
 }
 
 PKI::HostRandomNumberGenerator::HostRandomNumberGenerator() = default;

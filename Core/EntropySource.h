@@ -14,7 +14,7 @@ namespace Core
 
     public:
         [[nodiscard]]
-        virtual Base::ZBytes get_seed(std::string_view nonce, std::size_t size) const = 0;
+        virtual Base::ZBytes get_seed(std::string_view nonce, std::size_t size) = 0;
 
         [[nodiscard]]
         virtual std::size_t max_seed_size() const = 0;

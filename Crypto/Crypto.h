@@ -25,6 +25,12 @@ namespace Crypto {
             std::size_t iteration_count,
             std::size_t key_length);
 
+    Base::ZBytes compute_pbkdf2_hmac_sha256(
+            std::span<const uint8_t> password,
+            std::span<const uint8_t> salt,
+            std::size_t iteration_count,
+            std::size_t key_length);
+
     Base::ZBytes compute_hkdf_hmac_sha512(
             std::span<const uint8_t> key,
             std::span<const uint8_t> salt,

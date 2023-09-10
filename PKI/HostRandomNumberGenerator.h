@@ -12,7 +12,7 @@ namespace PKI {
 
     public:
 
-        [[nodiscard]] Base::ZBytes generate_random(std::size_t length) const override;
+        void generate_random(std::span<uint8_t> out) override;
 
         static std::shared_ptr<HostRandomNumberGenerator> instance();
     };

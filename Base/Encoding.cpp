@@ -41,7 +41,7 @@ Base::ZString Base::Encoding::encode_base64_url_no_padding(std::span<const uint8
     return output;
 }
 
-static uint8_t get_idx(const char c) {
+static uint8_t b64_idx(const char c) {
 
     if (c >= 'A' && c <= 'Z')
         return c - 'A';
@@ -86,19 +86,19 @@ Base::ZBytes Base::Encoding::decode_base64_any(std::string_view s)
     std::string_view::size_type i = 0;
 
     for (; i < s.size() / 4 * 4; i += 4) {
-        output.push_back(get_idx(s[i]) << 2 | get_idx(s[i + 1]) >> 4);
-        output.push_back(get_idx(s[i + 1]) << 4 | get_idx(s[i + 2]) >> 2);
-        output.push_back(get_idx(s[i + 2]) << 6 | get_idx(s[i + 3]));
+        output.push_back(b64_idx(s[i]) << 2 | b64_idx(s[i + 1]) >> 4);
+        output.push_back(b64_idx(s[i + 1]) << 4 | b64_idx(s[i + 2]) >> 2);
+        output.push_back(b64_idx(s[i + 2]) << 6 | b64_idx(s[i + 3]));
     }
 
     if (s.size() % 4 == 3) {
-        output.push_back(get_idx(s[i]) << 2 | get_idx(s[i + 1]) >> 4);
-        output.push_back(get_idx(s[i + 1]) << 4 | get_idx(s[i + 2]) >> 2);
+        output.push_back(b64_idx(s[i]) << 2 | b64_idx(s[i + 1]) >> 4);
+        output.push_back(b64_idx(s[i + 1]) << 4 | b64_idx(s[i + 2]) >> 2);
         return output;
     }
 
     if (s.size() % 4 == 2) {
-        output.push_back(get_idx(s[i]) << 2 | get_idx(s[i + 1]) >> 4);
+        output.push_back(b64_idx(s[i]) << 2 | b64_idx(s[i + 1]) >> 4);
         return output;
     }
 
@@ -120,4 +120,35 @@ Base::ZString Base::Encoding::encode_hex_lower(std::span<const uint8_t> bytes)
     }
 
     return result;
+}
+
+static uint8_t b16_idx(const char c) {
+
+    if (c >= '0' && c <= '9')
+        return c - '0';
+
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
+
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+
+    throw std::runtime_error("Invalid base16 sequence");
+}
+
+Base::ZBytes Base::Encoding::decode_hex_any(std::string_view s)
+{
+    if (s.size() % 2 != 0)
+        throw std::invalid_argument("Invalid base16 length");
+
+    Base::ZBytes output;
+
+    output.reserve(s.size() / 2);
+
+    for (std::string_view::size_type i = 0; i < s.size(); i += 2)
+    {
+        output.push_back(b16_idx(s[i]) << 4 | b16_idx(s[i + 1]));
+    }
+
+    return output;
 }
