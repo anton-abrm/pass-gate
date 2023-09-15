@@ -6,9 +6,9 @@ static uint8_t F(const uint8_t x, std::span<const uint8_t> a) {
 
     uint8_t sum {0};
 
-    for (std::size_t i = 0; i < a.size(); ++i)
+    for (std::size_t i = a.size(); i > 0; --i)
     {
-        sum = GF256::add(sum, GF256::multiply(a[i], GF256::power(x, i)));
+        sum = GF256::add(GF256::multiply(sum, x), a[i - 1]);
     }
 
     return sum;

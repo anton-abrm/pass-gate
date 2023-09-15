@@ -110,15 +110,3 @@ uint8_t GF256::divide(uint8_t x, uint8_t y)
 
     return EXP[sum % 255];
 }
-
-uint8_t GF256::power(uint8_t x, std::size_t y)
-{
-    uint8_t result {1};
-
-    for (std::size_t i = 0; i < y; ++i)
-    {
-        result = multiply(x, result);
-    }
-
-    return result;
-}
