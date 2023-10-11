@@ -652,7 +652,7 @@ namespace GUI {
         const auto message = ui->data_plain_edit->toPlainText().trimmed();
 
         EncryptionVersion version;
-        QString body_base64;
+        std::string body_base64;
 
         const auto sections = message.split(".");
 
@@ -671,15 +671,21 @@ namespace GUI {
                 version > EncryptionVersion::EncryptionV2)
                     throw std::runtime_error("Invalid format.");
 
-            body_base64 = sections.at(3);
+            body_base64 = sections.at(3).toStdString();
         }
         else
         {
             version = EncryptionVersion::EncryptionV1;
-            body_base64 = message;
+            body_base64 = message.toStdString();
         }
 
-        const auto body = Base::Encoding::decode_base64_any(body_base64.toStdString());
+        body_base64.erase(
+                std::remove_if(body_base64.begin(), body_base64.end(), [](const auto ch) {
+                    return std::isspace(ch, std::locale::classic());
+                }),
+                body_base64.end());
+
+        const auto body = Base::Encoding::decode_base64_any(body_base64);
 
         const auto encryption_service = create_encryption_service(version, create_entropy_context()->source);
 
