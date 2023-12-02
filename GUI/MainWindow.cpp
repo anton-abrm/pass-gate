@@ -23,7 +23,7 @@
 #include <Keyboard/Keyboard.h>
 #include "Crypto/BIP39.h"
 #include <Crypto/Crypto.h>
-#include "Validation/Validation.h"
+#include "SecretFormatter.h"
 
 #include "Core/BIP39EntropySource.h"
 #include "Core/BIP39EntropySourceV2.h"
@@ -46,8 +46,6 @@ static const QString c_config_pinned_public_key_name = "pinned-public-key-name";
 static const QString c_map_key_token = "key-token";
 static const QString c_map_key_id = "key-id";
 static const QString c_map_key_name = "key-name";
-
-static const QChar c_password_separator = u'\u22c5';
 
 static const QString c_save_load_dialog_filter = "Pass Gate Secret (*.pgs)";
 static const QString c_select_provider_dialog_filter = "PKCS (*.so *.pem *.pk8 *.p12 *.pfx)";
@@ -90,47 +88,6 @@ static std::optional<std::tuple<uint8_t, uint8_t>> parse_m_n(const QString &valu
         static_cast<uint8_t>(m),
         static_cast<uint8_t>(n)
     );
-}
-
-static QString convert_password_to_readable_form(QString password)
-{
-    if (password.size() == 0)
-        return password;
-
-    if (password.contains('\x20'))
-        return password;
-
-    if (Validation::is_formatted_guid(password))
-        return password;
-
-    QList<int> sizes = {4, 5, 6};
-
-    for (auto size: sizes) {
-
-        if (password.size() % size == 0) {
-
-            QString formatted_secret;
-
-            formatted_secret.reserve(password.size() + password.size() / size - 1);
-
-            for (int i = 0; i < password.size(); ++i) {
-
-                if (i != 0 && i % size == 0)
-                    formatted_secret.append(c_password_separator);
-
-                formatted_secret.append(password[i]);
-            }
-
-            return formatted_secret;
-        }
-    }
-
-    return password;
-}
-
-static QString convert_password_to_original_from(QString password)
-{
-    return password.remove(c_password_separator);
 }
 
 namespace GUI {
@@ -299,7 +256,7 @@ namespace GUI {
 
     void MainWindow::enter_button_clicked()
     {
-        auto secret = convert_password_to_original_from(ui->secret_line_edit->text());
+        auto secret = SecretFormatter::convert_password_to_original_from(ui->secret_line_edit->text());
 
         std::thread([=](){
             Keyboard::enter_text(secret.toStdString());
@@ -584,7 +541,7 @@ namespace GUI {
 
     void MainWindow::encrypt() {
 
-        auto data = convert_password_to_original_from(
+        auto data = SecretFormatter::convert_password_to_original_from(
                 ui->secret_line_edit->text()).toStdString();
 
         if (data.empty() && !prompt_warning_yes_no("Do you really want to encrypt the empty data?"))
@@ -927,15 +884,15 @@ namespace GUI {
     {
         const auto old_secret = ui->secret_line_edit->text();
 
-        auto secret = convert_password_to_original_from(old_secret);
+        auto secret = SecretFormatter::convert_password_to_original_from(old_secret);
         if (ui->secret_line_edit->echoMode() == QLineEdit::EchoMode::Normal)
-            secret = convert_password_to_readable_form(secret);
+            secret = SecretFormatter::convert_password_to_readable_form(secret);
 
         QString::size_type stripped_cursor_position = 0;
 
         for (QString::size_type i = 0; i < ui->secret_line_edit->cursorPosition(); i++)
         {
-            if (old_secret[i] != c_password_separator)
+            if (old_secret[i] != SecretFormatter::c_password_separator)
                 stripped_cursor_position++;
         }
 
@@ -943,7 +900,7 @@ namespace GUI {
 
         for (QString::size_type i = 0; i < stripped_cursor_position; )
         {
-            if (secret[cursor_position] != c_password_separator)
+            if (secret[cursor_position] != SecretFormatter::c_password_separator)
                 i++;
 
             cursor_position++;
@@ -995,7 +952,7 @@ namespace GUI {
             text = ui->copy_secret_button->text();
 
             QApplication::clipboard()->setText(
-                    convert_password_to_original_from(
+                    SecretFormatter::convert_password_to_original_from(
                             ui->secret_line_edit->text()));
 
             seconds = 15;
@@ -1476,7 +1433,7 @@ namespace GUI {
 
         const auto salt = ui->source_line_edit->text().toStdString();
 
-        const auto password = convert_password_to_original_from(
+        const auto password = SecretFormatter::convert_password_to_original_from(
                 ui->secret_line_edit->text()).toStdString();
 
         const bool is_hhhs = Password::is_hhhs(password);
@@ -1514,7 +1471,7 @@ namespace GUI {
 
             if (is_hhhs) {
                 const auto encoded = Password::encode_hhhs(share);
-                text += convert_password_to_readable_form(
+                text += SecretFormatter::convert_password_to_readable_form(
                         QString::fromUtf8(encoded.data(), static_cast<int>(encoded.size())));
             }
             else {
@@ -1547,7 +1504,7 @@ namespace GUI {
 
             const auto id = static_cast<uint8_t>(parts[0].trimmed().toInt());
 
-            const auto body = convert_password_to_original_from(parts[1].trimmed()).toStdString();
+            const auto body = SecretFormatter::convert_password_to_original_from(parts[1].trimmed()).toStdString();
 
             if (is_hhhs_opt == std::nullopt) {
                 is_hhhs_opt = Password::is_hhhs(body);
