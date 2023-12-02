@@ -53,7 +53,7 @@ add_executable(pass-gate
         PKI/PKIContainer.cpp
         PKI/HostRandomNumberGenerator.cpp
         Password/Password.cpp
-        Validation/Validation.cpp
+        GUI/SecretFormatter.cpp
         Crypto/SLIP39.cpp
         Crypto/GF256.cpp
         Crypto/Shamir.cpp
