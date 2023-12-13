@@ -34,7 +34,7 @@
 #include "Base/Encoding.h"
 #include "Crypto/Shamir.h"
 #include "Crypto/SLIP39.h"
-#include "Core/BufferedRandomNumberGenerator.h"
+#include "Core/MemoryRandomNumberGenerator.h"
 
 #include <Version.h>
 
@@ -290,6 +290,7 @@ namespace GUI {
 
             case Command::Split:
             case Command::Recombine:
+                info = "shamir";
                 break;
         }
 
@@ -1433,6 +1434,18 @@ namespace GUI {
 
         const auto salt = ui->source_line_edit->text().toStdString();
 
+        switch (current_entropy_type())
+        {
+            case EntropySourceType::Random:
+                break;
+
+            case EntropySourceType::Signature:
+            case EntropySourceType::BIP39:
+                if (salt.empty() && !prompt_warning_yes_no("Do you really want to use the empty salt?"))
+                    return;
+                break;
+        }
+
         const auto password = SecretFormatter::convert_password_to_original_from(
                 ui->secret_line_edit->text()).toStdString();
 
@@ -1456,7 +1469,9 @@ namespace GUI {
 
         const auto entropy_ctx = create_entropy_context();
 
-        Core::BufferedRandomNumberGenerator rng(g_rnd, encrypted_secret.size() * (m - 1));
+        const auto seed = entropy_ctx->source->get_seed(salt, encrypted_secret.size() * (m - 1));
+
+        Core::MemoryRandomNumberGenerator rng(seed);
 
         const auto shares = Shamir::create_shares(rng, encrypted_secret, m, n);
 

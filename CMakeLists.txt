@@ -59,6 +59,7 @@ add_executable(pass-gate
         Crypto/Shamir.cpp
         Core/BufferedRandomNumberGenerator.cpp
         Core/BufferedRandomNumberGenerator.h
+        Core/MemoryRandomNumberGenerator.cpp
 )
 
 target_link_libraries(pass-gate
@@ -107,6 +108,7 @@ add_executable(pass-gate-tests
         Base/Encoding.cpp
         Core/RandomNumberGenerator.cpp
         Core/BufferedRandomNumberGenerator.cpp
+        Core/MemoryRandomNumberGenerator.cpp
         Crypto/Crypto.cpp
         Crypto/SLIP39.cpp
         Crypto/GF256.cpp
