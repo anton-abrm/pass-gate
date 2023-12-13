@@ -5,34 +5,7 @@
 
 #include "Base/Encoding.h"
 #include "Crypto/Shamir.h"
-namespace {
-
-    class RNG final : public virtual Core::RandomNumberGenerator {
-    public:
-        explicit RNG(std::span<const uint8_t> buffer):
-            m_buffer{buffer.begin(), buffer.end()},
-            m_index{0} {
-        }
-
-        void generate_random(std::span<uint8_t> span) override {
-
-            if (span.size() > m_buffer.size() - m_index) {
-                throw std::logic_error("Not enough entropy.");
-            }
-
-            std::copy(m_buffer.begin() + static_cast<ssize_t>(m_index),
-                      m_buffer.begin() + static_cast<ssize_t>(m_index + span.size()),
-                      span.begin());
-
-            m_index += span.size();
-        }
-
-
-    private:
-        Base::ZBytes m_buffer;
-        std::size_t m_index;
-    };
-}
+#include "Core/MemoryRandomNumberGenerator.h"
 
 static void create_shares_test(
         const std::string &secret,
@@ -45,7 +18,7 @@ static void create_shares_test(
     const auto secret_bytes = Base::Encoding::decode_hex_any(secret);
     const auto entropy = Base::Encoding::decode_hex_any(random);
 
-    RNG rng(entropy);
+    Core::MemoryRandomNumberGenerator rng(entropy);
 
     const auto shares = Shamir::create_shares(rng, secret_bytes, m, n);
 
