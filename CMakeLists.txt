@@ -67,6 +67,7 @@ add_executable(pass-gate
         PGS/V1/BIP39EntropySourceInfo.cpp
         PGS/V1/RandomEntropySource.cpp
         PGS/V1/EncryptionInfo.cpp
+        GUI/WidgetUtil.cpp
 )
 
 target_link_libraries(pass-gate
