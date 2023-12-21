@@ -2,6 +2,7 @@
 #include <ui_MainWindow.h>
 
 #include <thread>
+#include <memory>
 
 #include <QMessageBox>
 #include <QDebug>
@@ -39,6 +40,7 @@
 #include "PGS/V1/RandomEntropySource.h"
 #include "PGS/V1/SignatureEntropySourceInfo.h"
 #include "PGS/V1/BIP39EntropySourceInfo.h"
+#include "GUI/WidgetUtil.h"
 
 #include <Version.h>
 
@@ -1204,6 +1206,46 @@ namespace GUI {
         g_secret_path = file_path;
 
         update_window_title();
+
+        const auto package = PGS::V1::Package::parse(
+                ui->data_plain_edit->toPlainText().trimmed().toStdString());
+
+        if (!package)
+            return;
+
+        GUI::WidgetUtil::select_combo_box_item_with_data(ui->command_combo_box, static_cast<int>(Command::Decrypt));
+
+        const auto entropy_source = package.value()->entropy_source();
+
+        const auto signature_source = std::dynamic_pointer_cast<PGS::V1::SignatureEntropySourceInfo>(entropy_source);
+
+        if (signature_source) {
+            GUI::WidgetUtil::select_combo_box_item_with_data(
+                    ui->entropy_type_combo_box, static_cast<int>(PGS::EntropySourceType::Signature));
+            GUI::WidgetUtil::select_combo_box_item_with_data(
+                    ui->entropy_format_combo_box, static_cast<int>(signature_source->version()));
+            GUI::WidgetUtil::select_combo_box_item_starting_with(
+                    ui->key_combo_box, QString::fromStdString(signature_source->token()));
+            return;
+        }
+
+        const auto bip39_source = std::dynamic_pointer_cast<PGS::V1::BIP39EntropySourceInfo>(entropy_source);
+
+        if (bip39_source) {
+            GUI::WidgetUtil::select_combo_box_item_with_data(
+                    ui->entropy_type_combo_box, static_cast<int>(PGS::EntropySourceType::BIP39));
+            GUI::WidgetUtil::select_combo_box_item_with_data(
+                    ui->entropy_format_combo_box, static_cast<int>(bip39_source->version()));
+            return;
+        }
+
+        const auto random_source = std::dynamic_pointer_cast<PGS::V1::RandomEntropySource>(entropy_source);
+
+        if (random_source) {
+            GUI::WidgetUtil::select_combo_box_item_with_data(
+                    ui->entropy_type_combo_box, static_cast<int>(PGS::EntropySourceType::Random));
+            return;
+        }
     }
 
     void MainWindow::update_save_button_status()
