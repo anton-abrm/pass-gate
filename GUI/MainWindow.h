@@ -4,6 +4,7 @@
 #include <Base/ZVector.h>
 #include "Core/EntropySource.h"
 #include "Core/EncryptionService.h"
+#include "PGS/Constants.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,26 +24,6 @@ namespace GUI {
 
     private:
 
-        enum class SignatureVersion {
-            SignatureV2 = 2,
-        };
-
-        enum class BIP39Version {
-            BIP39V1 = 1,
-            BIP39V2 = 2,
-        };
-
-        enum class EncryptionVersion {
-            EncryptionV1 = 1,
-            EncryptionV2 = 2,
-        };
-
-        enum class EntropySourceType {
-            Signature,
-            BIP39,
-            Random,
-        };
-
         enum class Command {
             Encrypt,
             Decrypt,
@@ -58,14 +39,14 @@ namespace GUI {
             std::shared_ptr<Core::EntropySource> source;
         } EntropyContext;
 
-        [[nodiscard]] inline EntropySourceType current_entropy_type() const;
-        [[nodiscard]] inline SignatureVersion current_signature_version() const;
-        [[nodiscard]] inline BIP39Version current_bip39_version() const;
+        [[nodiscard]] inline PGS::EntropySourceType current_entropy_type() const;
+        [[nodiscard]] inline PGS::SignatureVersion current_signature_version() const;
+        [[nodiscard]] inline PGS::BIP39Version current_bip39_version() const;
         [[nodiscard]] inline Command current_command() const;
 
         [[nodiscard]] std::unique_ptr<EntropyContext> create_entropy_context() const;
         [[nodiscard]] std::unique_ptr<Core::EncryptionService> create_encryption_service(
-                EncryptionVersion version,
+                PGS::EncryptionVersion version,
                 std::shared_ptr<Core::EntropySource> source) const;
 
         void apply_provider();
