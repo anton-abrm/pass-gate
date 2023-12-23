@@ -60,6 +60,7 @@ add_executable(pass-gate
         Core/BufferedRandomNumberGenerator.cpp
         Core/BufferedRandomNumberGenerator.h
         Core/MemoryRandomNumberGenerator.cpp
+        Base/StringUtil.cpp
 )
 
 target_link_libraries(pass-gate
@@ -120,6 +121,8 @@ add_executable(pass-gate-tests
         Tests/ShamirTests.cpp
         Tests/BufferedRandomNumberGeneratorTests.cpp
         Tests/PasswordTests.cpp
+        Base/StringUtil.cpp
+        Tests/StringUtilTests.cpp
         )
 
 target_link_libraries(pass-gate-tests
