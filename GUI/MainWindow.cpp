@@ -144,9 +144,9 @@ namespace GUI {
         ui->command_combo_box->addItem("Split", static_cast<int>(Command::Split));
         ui->command_combo_box->addItem("Recombine", static_cast<int>(Command::Recombine));
 
-        ui->entropy_type_combo_box->addItem("Signature", static_cast<int>(EntropySourceType::Signature));
-        ui->entropy_type_combo_box->addItem("BIP39", static_cast<int>(EntropySourceType::BIP39));
-        ui->entropy_type_combo_box->addItem("Random", static_cast<int>(EntropySourceType::Random));
+        ui->entropy_type_combo_box->addItem("Signature", static_cast<int>(PGS::EntropySourceType::Signature));
+        ui->entropy_type_combo_box->addItem("BIP39", static_cast<int>(PGS::EntropySourceType::BIP39));
+        ui->entropy_type_combo_box->addItem("Random", static_cast<int>(PGS::EntropySourceType::Random));
 
         QSettings settings(c_config_name, c_config_name);
 
@@ -296,14 +296,14 @@ namespace GUI {
 
         switch (current_entropy_type())
         {
-            case EntropySourceType::Random:
+            case PGS::EntropySourceType::Random:
             {
                 entropy->entropy_id = "rand";
                 entropy->source = std::make_unique<Core::RandomEntropySource>(g_rnd);
                 break;
             }
 
-            case EntropySourceType::BIP39:
+            case PGS::EntropySourceType::BIP39:
             {
                 const auto mnemonic = ui->mnemonic_line_edit->text().toStdString();
 
@@ -323,11 +323,11 @@ namespace GUI {
 
                 switch (bip39_version)
                 {
-                    case BIP39Version::BIP39V1:
+                    case PGS::BIP39Version::BIP39V1:
                         entropy->source = std::make_unique<Core::BIP39EntropySource>(mnemonic);
                         break;
 
-                    case BIP39Version::BIP39V2:
+                    case PGS::BIP39Version::BIP39V2:
                         entropy->source = std::make_unique<Core::BIP39EntropySourceV2>(mnemonic, info);
                         break;
                 }
@@ -335,7 +335,7 @@ namespace GUI {
                 break;
             }
 
-            case EntropySourceType::Signature:
+            case PGS::EntropySourceType::Signature:
             {
                 if (ui->key_combo_box->currentIndex() == 0)
                     throw std::runtime_error("The certificate is not selected");
@@ -361,7 +361,7 @@ namespace GUI {
 
                 switch (sign_version)
                 {
-                    case SignatureVersion::SignatureV2:
+                    case PGS::SignatureVersion::SignatureV2:
 
                         entropy->source = std::make_unique<Core::SignatureEntropySourceV2>(
                                 g_provider,
@@ -388,11 +388,11 @@ namespace GUI {
 
         switch (current_entropy_type())
         {
-            case EntropySourceType::Random:
+            case PGS::EntropySourceType::Random:
                 break;
 
-            case EntropySourceType::Signature:
-            case EntropySourceType::BIP39:
+            case PGS::EntropySourceType::Signature:
+            case PGS::EntropySourceType::BIP39:
                 if (nonce.empty() && !prompt_warning_yes_no("Do you really want to use the empty salt?"))
                     return;
                 break;
@@ -424,11 +424,11 @@ namespace GUI {
 
         switch (current_entropy_type())
         {
-            case EntropySourceType::Random:
+            case PGS::EntropySourceType::Random:
                 break;
 
-            case EntropySourceType::Signature:
-            case EntropySourceType::BIP39:
+            case PGS::EntropySourceType::Signature:
+            case PGS::EntropySourceType::BIP39:
                 if (nonce.empty() && !prompt_warning_yes_no("Do you really want to use the empty salt?"))
                     return;
                 break;
@@ -463,11 +463,11 @@ namespace GUI {
 
         switch (current_entropy_type())
         {
-            case EntropySourceType::Random:
+            case PGS::EntropySourceType::Random:
                 break;
 
-            case EntropySourceType::Signature:
-            case EntropySourceType::BIP39:
+            case PGS::EntropySourceType::Signature:
+            case PGS::EntropySourceType::BIP39:
                 if (nonce.empty() && !prompt_warning_yes_no("Do you really want to use the empty salt?"))
                     return;
                 break;
@@ -521,7 +521,7 @@ namespace GUI {
     }
 
     std::unique_ptr<Core::EncryptionService> MainWindow::create_encryption_service(
-            EncryptionVersion version,
+            PGS::EncryptionVersion version,
             std::shared_ptr<Core::EntropySource> source) const {
 
         const auto salt = ui->source_line_edit->text().toStdString();
@@ -529,10 +529,10 @@ namespace GUI {
         switch (version)
         {
 
-            case EncryptionVersion::EncryptionV2:
+            case PGS::EncryptionVersion::EncryptionV2:
                 return std::make_unique<Core::EncryptionServiceV2>(std::move(source), g_rnd, salt);
 
-            case EncryptionVersion::EncryptionV1:
+            case PGS::EncryptionVersion::EncryptionV1:
                 return std::make_unique<Core::EncryptionServiceV1>(std::move(source), g_rnd, salt);
 
             default:
@@ -548,21 +548,21 @@ namespace GUI {
         if (data.empty() && !prompt_warning_yes_no("Do you really want to encrypt the empty data?"))
             return;
 
-        const auto enc_version = static_cast<EncryptionVersion>(ui->password_format_combo_box->currentData().toInt());
+        const auto enc_version = static_cast<PGS::EncryptionVersion>(ui->password_format_combo_box->currentData().toInt());
 
         switch (current_entropy_type())
         {
-            case EntropySourceType::Random:
+            case PGS::EntropySourceType::Random:
                 if (!prompt_warning_yes_no("Do you really want to encrypt by using the random entropy?"))
                     return;
                 break;
 
-            case EntropySourceType::Signature:
-            case EntropySourceType::BIP39:
+            case PGS::EntropySourceType::Signature:
+            case PGS::EntropySourceType::BIP39:
             {
                 switch (enc_version)
                 {
-                    case EncryptionVersion::EncryptionV1:
+                    case PGS::EncryptionVersion::EncryptionV1:
                         if (ui->source_line_edit->text().isEmpty() &&
                             !prompt_warning_yes_no("Do you really want to encrypt the secret without the salt?\n"
                                                    "The ciphers will be the same for the same passwords.")) {
@@ -570,7 +570,7 @@ namespace GUI {
                         }
 
                         break;
-                    case EncryptionVersion::EncryptionV2:
+                    case PGS::EncryptionVersion::EncryptionV2:
 
                         if (!ui->source_line_edit->text().isEmpty() &&
                             !prompt_warning_yes_no("Do you really want to encrypt the secret with the salt?\n"
@@ -609,7 +609,7 @@ namespace GUI {
 
         const auto message = ui->data_plain_edit->toPlainText().trimmed();
 
-        EncryptionVersion version;
+        PGS::EncryptionVersion version;
         std::string body_base64;
 
         const auto sections = message.split(".");
@@ -623,17 +623,17 @@ namespace GUI {
 
             version_str.remove(0, 5);
 
-            version = static_cast<EncryptionVersion>(version_str.toInt());
+            version = static_cast<PGS::EncryptionVersion>(version_str.toInt());
 
-            if (version < EncryptionVersion::EncryptionV1 ||
-                version > EncryptionVersion::EncryptionV2)
+            if (version < PGS::EncryptionVersion::EncryptionV1 ||
+                version > PGS::EncryptionVersion::EncryptionV2)
                     throw std::runtime_error("Invalid format.");
 
             body_base64 = sections.at(3).toStdString();
         }
         else
         {
-            version = EncryptionVersion::EncryptionV1;
+            version = PGS::EncryptionVersion::EncryptionV1;
             body_base64 = message.toStdString();
         }
 
@@ -1285,9 +1285,9 @@ namespace GUI {
         return static_cast<Command>(ui->command_combo_box->currentData().toInt());
     }
 
-    MainWindow::EntropySourceType MainWindow::current_entropy_type() const
+    PGS::EntropySourceType MainWindow::current_entropy_type() const
     {
-       return static_cast<EntropySourceType>(ui->entropy_type_combo_box->currentData().toInt());
+       return static_cast<PGS::EntropySourceType>(ui->entropy_type_combo_box->currentData().toInt());
     }
 
     void MainWindow::reset_format_combo_box_for_password()
@@ -1342,8 +1342,8 @@ namespace GUI {
     void MainWindow::reset_format_combo_box_for_encryption()
     {
         ui->password_format_combo_box->clear();
-        ui->password_format_combo_box->addItem("v2 (Latest)", static_cast<int>(EncryptionVersion::EncryptionV2));
-        ui->password_format_combo_box->addItem("v1", static_cast<int>(EncryptionVersion::EncryptionV1));
+        ui->password_format_combo_box->addItem("v2 (Latest)", static_cast<int>(PGS::EncryptionVersion::EncryptionV2));
+        ui->password_format_combo_box->addItem("v1", static_cast<int>(PGS::EncryptionVersion::EncryptionV1));
         ui->password_format_combo_box->setEditable(false);
     }
 
@@ -1373,27 +1373,27 @@ namespace GUI {
         ui->secret_line_edit->setPlaceholderText(text);
     }
 
-    MainWindow::SignatureVersion MainWindow::current_signature_version() const
+    PGS::SignatureVersion MainWindow::current_signature_version() const
     {
-        return static_cast<SignatureVersion>(ui->entropy_format_combo_box->currentData().toInt());
+        return static_cast<PGS::SignatureVersion>(ui->entropy_format_combo_box->currentData().toInt());
     }
 
-    MainWindow::BIP39Version MainWindow::current_bip39_version() const
+    PGS::BIP39Version MainWindow::current_bip39_version() const
     {
-        return static_cast<BIP39Version>(ui->entropy_format_combo_box->currentData().toInt());
+        return static_cast<PGS::BIP39Version>(ui->entropy_format_combo_box->currentData().toInt());
     }
 
     void MainWindow::reset_format_combo_box_for_signature()
     {
         ui->entropy_format_combo_box->clear();
-        ui->entropy_format_combo_box->addItem("v2 (Latest)", static_cast<int>(SignatureVersion::SignatureV2));
+        ui->entropy_format_combo_box->addItem("v2 (Latest)", static_cast<int>(PGS::SignatureVersion::SignatureV2));
     }
 
     void MainWindow::reset_format_combo_box_for_bip39()
     {
         ui->entropy_format_combo_box->clear();
-        ui->entropy_format_combo_box->addItem("v2 (Latest)", static_cast<int>(BIP39Version::BIP39V2));
-        ui->entropy_format_combo_box->addItem("v1", static_cast<int>(BIP39Version::BIP39V1));
+        ui->entropy_format_combo_box->addItem("v2 (Latest)", static_cast<int>(PGS::BIP39Version::BIP39V2));
+        ui->entropy_format_combo_box->addItem("v1", static_cast<int>(PGS::BIP39Version::BIP39V1));
     }
 
     void MainWindow::reset_format_combo_box_for_random()
@@ -1404,8 +1404,8 @@ namespace GUI {
 
     void MainWindow::entropy_type_combo_box_index_changed()
     {
-        static std::optional<EntropySourceType> last_entropy_type;
-        static std::map<EntropySourceType, QString> last_values;
+        static std::optional<PGS::EntropySourceType> last_entropy_type;
+        static std::map<PGS::EntropySourceType, QString> last_values;
 
         if (last_entropy_type)
             last_values[last_entropy_type.value()] = ui->entropy_format_combo_box->currentText();
@@ -1414,15 +1414,15 @@ namespace GUI {
 
         switch (entropy_type)
         {
-            case EntropySourceType::Signature:
+            case PGS::EntropySourceType::Signature:
                 reset_format_combo_box_for_signature();
                 break;
 
-            case EntropySourceType::BIP39:
+            case PGS::EntropySourceType::BIP39:
                 reset_format_combo_box_for_bip39();
                 break;
 
-            case EntropySourceType::Random:
+            case PGS::EntropySourceType::Random:
                 reset_format_combo_box_for_random();
                 break;
         }
@@ -1439,11 +1439,11 @@ namespace GUI {
 
         switch (current_entropy_type())
         {
-            case EntropySourceType::Random:
+            case PGS::EntropySourceType::Random:
                 break;
 
-            case EntropySourceType::Signature:
-            case EntropySourceType::BIP39:
+            case PGS::EntropySourceType::Signature:
+            case PGS::EntropySourceType::BIP39:
                 if (salt.empty() && !prompt_warning_yes_no("Do you really want to use the empty salt?"))
                     return;
                 break;
