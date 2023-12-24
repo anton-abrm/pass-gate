@@ -8,6 +8,8 @@ const char * c_a64u =
 const char * c_a16 =
         "0123456789abcdef";
 
+static thread_local bool tl_error;
+
 Base::ZString Base::Encoding::encode_base64_url_no_padding(std::span<const uint8_t> bytes) {
 
     Base::ZString output;
@@ -58,13 +60,19 @@ static uint8_t b64_idx(const char c) {
     if (c == '_' || c == '/')
         return 63;
 
-    throw std::runtime_error("Invalid base64 sequence");
+    tl_error = true;
+
+    return 0;
 }
 
-Base::ZBytes Base::Encoding::decode_base64_any(std::string_view s)
+std::optional<Base::ZBytes> Base::Encoding::decode_base64_any(std::string_view s)
 {
+    tl_error = false;
+
+    Base::ZBytes output;
+
     if (s.empty())
-        return {};
+        return output;
 
     if (s.ends_with('='))
         s.remove_suffix(1);
@@ -73,32 +81,44 @@ Base::ZBytes Base::Encoding::decode_base64_any(std::string_view s)
         s.remove_suffix(1);
 
     if (s.size() % 4 == 1)
-        throw std::invalid_argument("Invalid base64 length");
+        return std::nullopt;
 
     Base::ZBytes::size_type output_size =
             s.size() / 4 * 3 +
             s.size() % 4 - 1;
-
-    Base::ZBytes output;
 
     output.reserve(output_size);
 
     std::string_view::size_type i = 0;
 
     for (; i < s.size() / 4 * 4; i += 4) {
+
         output.push_back(b64_idx(s[i]) << 2 | b64_idx(s[i + 1]) >> 4);
         output.push_back(b64_idx(s[i + 1]) << 4 | b64_idx(s[i + 2]) >> 2);
         output.push_back(b64_idx(s[i + 2]) << 6 | b64_idx(s[i + 3]));
+
+        if (tl_error)
+            return std::nullopt;
     }
 
     if (s.size() % 4 == 3) {
+
         output.push_back(b64_idx(s[i]) << 2 | b64_idx(s[i + 1]) >> 4);
         output.push_back(b64_idx(s[i + 1]) << 4 | b64_idx(s[i + 2]) >> 2);
+
+        if (tl_error)
+            return std::nullopt;
+
         return output;
     }
 
     if (s.size() % 4 == 2) {
+
         output.push_back(b64_idx(s[i]) << 2 | b64_idx(s[i + 1]) >> 4);
+
+        if (tl_error)
+            return std::nullopt;
+
         return output;
     }
 
@@ -133,13 +153,17 @@ static uint8_t b16_idx(const char c) {
     if (c >= 'a' && c <= 'f')
         return c - 'a' + 10;
 
-    throw std::runtime_error("Invalid base16 sequence");
+    tl_error = true;
+
+    return 0;
 }
 
-Base::ZBytes Base::Encoding::decode_hex_any(std::string_view s)
+std::optional<Base::ZBytes> Base::Encoding::decode_hex_any(std::string_view s)
 {
+    tl_error = false;
+
     if (s.size() % 2 != 0)
-        throw std::invalid_argument("Invalid base16 length");
+        return std::nullopt;
 
     Base::ZBytes output;
 
@@ -148,6 +172,9 @@ Base::ZBytes Base::Encoding::decode_hex_any(std::string_view s)
     for (std::string_view::size_type i = 0; i < s.size(); i += 2)
     {
         output.push_back(b16_idx(s[i]) << 4 | b16_idx(s[i + 1]));
+
+        if (tl_error)
+            return std::nullopt;
     }
 
     return output;

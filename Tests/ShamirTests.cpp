@@ -15,8 +15,8 @@ static void create_shares_test(
         const std::map<uint8_t, std::string> &expected_shares
 ) {
 
-    const auto secret_bytes = Base::Encoding::decode_hex_any(secret);
-    const auto entropy = Base::Encoding::decode_hex_any(random);
+    const auto secret_bytes = Base::Encoding::decode_hex_any(secret).value();
+    const auto entropy = Base::Encoding::decode_hex_any(random).value();
 
     Core::MemoryRandomNumberGenerator rng(entropy);
 
@@ -41,7 +41,7 @@ static void recombine_shares_test(
     std::map<uint8_t, Base::ZBytes> shares;
 
     for (const auto &[x, share_hex] : shares_hex) {
-        shares[x] = Base::Encoding::decode_hex_any(share_hex);
+        shares[x] = Base::Encoding::decode_hex_any(share_hex).value();
     }
 
     const auto recombined_secret = Shamir::recombine_shares(shares, m);
