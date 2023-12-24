@@ -60,7 +60,13 @@ add_executable(pass-gate
         Core/BufferedRandomNumberGenerator.cpp
         Core/BufferedRandomNumberGenerator.h
         Core/MemoryRandomNumberGenerator.cpp
+        PGS/V1/Package.cpp
+        PGS/V1/EntropySourceInfo.cpp
         Base/StringUtil.cpp
+        PGS/V1/SignatureEntropySourceInfo.cpp
+        PGS/V1/BIP39EntropySourceInfo.cpp
+        PGS/V1/RandomEntropySource.cpp
+        PGS/V1/EncryptionInfo.cpp
 )
 
 target_link_libraries(pass-gate
@@ -115,15 +121,22 @@ add_executable(pass-gate-tests
         Crypto/GF256.cpp
         Crypto/Shamir.cpp
         Password/Password.cpp
+        PGS/V1/Package.cpp
+        PGS/V1/EntropySourceInfo.cpp
+        PGS/V1/SignatureEntropySourceInfo.cpp
+        PGS/V1/BIP39EntropySourceInfo.cpp
         Tests/EncodingTests.cpp
         Tests/SLIP39Tests.cpp
         Tests/GF256Tests.cpp
         Tests/ShamirTests.cpp
         Tests/BufferedRandomNumberGeneratorTests.cpp
         Tests/PasswordTests.cpp
+        Tests/PGSV1Tests.cpp
         Base/StringUtil.cpp
         Tests/StringUtilTests.cpp
-        )
+        PGS/V1/RandomEntropySource.cpp
+        PGS/V1/EncryptionInfo.cpp
+)
 
 target_link_libraries(pass-gate-tests
         gtest
