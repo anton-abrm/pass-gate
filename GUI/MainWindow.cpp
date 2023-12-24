@@ -645,9 +645,12 @@ namespace GUI {
 
         const auto body = Base::Encoding::decode_base64_any(body_base64);
 
+        if (!body)
+            throw std::runtime_error("Invalid body format.");
+
         const auto encryption_service = create_encryption_service(version, create_entropy_context()->source);
 
-        const auto data = encryption_service->decrypt(body);
+        const auto data = encryption_service->decrypt(body.value());
 
         ui->secret_line_edit->setText(
                 QString::fromUtf8(

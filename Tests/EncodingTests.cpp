@@ -31,7 +31,7 @@ static void decode_base64_url_no_padding_test(
         std::string_view data,
         std::string_view expected) {
 
-    const auto result = Base::Encoding::decode_base64_any(data);
+    const auto result = Base::Encoding::decode_base64_any(data).value();
     const auto actual = std::string_view(reinterpret_cast<const char *>(result.data()), result.size());
 
     EXPECT_EQ(actual, expected);
