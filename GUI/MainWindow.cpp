@@ -35,6 +35,10 @@
 #include "Crypto/Shamir.h"
 #include "Crypto/SLIP39.h"
 #include "Core/MemoryRandomNumberGenerator.h"
+#include "PGS/V1/Package.h"
+#include "PGS/V1/RandomEntropySource.h"
+#include "PGS/V1/SignatureEntropySourceInfo.h"
+#include "PGS/V1/BIP39EntropySourceInfo.h"
 
 #include <Version.h>
 
@@ -298,7 +302,7 @@ namespace GUI {
         {
             case PGS::EntropySourceType::Random:
             {
-                entropy->entropy_id = "rand";
+                entropy->info = std::make_shared<PGS::V1::RandomEntropySource>();
                 entropy->source = std::make_unique<Core::RandomEntropySource>(g_rnd);
                 break;
             }
@@ -316,10 +320,8 @@ namespace GUI {
 
                 const auto bip39_version = current_bip39_version();
 
-                entropy->entropy_id.append("bip39-v");
-                entropy->entropy_id.append(std::to_string(static_cast<int>(bip39_version)));
-                entropy->entropy_id.append("-");
-                entropy->entropy_id.append(Base::Encoding::encode_hex_lower({hash.data(), c_output_kcv_size}));
+                entropy->info = std::make_shared<PGS::V1::BIP39EntropySourceInfo>(bip39_version);
+                entropy->info->set_token(Base::Encoding::encode_hex_lower({hash.data(), c_output_kcv_size}));
 
                 switch (bip39_version)
                 {
@@ -352,10 +354,8 @@ namespace GUI {
 
                 const auto sign_version = current_signature_version();
 
-                entropy->entropy_id.append("sign-v");
-                entropy->entropy_id.append(std::to_string(static_cast<int>(sign_version)));
-                entropy->entropy_id.append("-");
-                entropy->entropy_id.append(
+                entropy->info = std::make_shared<PGS::V1::SignatureEntropySourceInfo>(sign_version);
+                entropy->info->set_token(
                         Base::Encoding::encode_hex_lower(
                                 {reinterpret_cast<const uint8_t *>(token.data()), c_output_kcv_size}));
 
@@ -590,67 +590,30 @@ namespace GUI {
 
         const auto body = service->encrypt(data);
 
-        std::string msg;
+        const auto package = std::make_unique<PGS::V1::Package>();
 
-        msg.append("pgs-v1");
-        msg.append(".");
-        msg.append(ctx->entropy_id);
-        msg.append(".");
-        msg.append("enc-v");
-        msg.append(std::to_string(static_cast<int>(enc_version)));
-        msg.append(".");
-        msg.append(Base::Encoding::encode_base64_url_no_padding(body));
+        package->set_entropy_source(ctx->info);
+        package->set_encryption(std::make_shared<PGS::V1::EncryptionInfo>(enc_version));
+        package->set_body(body);
 
-        ui->data_plain_edit->setPlainText(
-                QString::fromStdString(msg));
+        const auto text = package->to_string();
+
+        ui->data_plain_edit->setPlainText(QString::fromStdString(text));
     }
 
     void MainWindow::decrypt() {
 
-        const auto message = ui->data_plain_edit->toPlainText().trimmed();
+        const auto message = ui->data_plain_edit->toPlainText().trimmed().toStdString();
 
-        PGS::EncryptionVersion version;
-        std::string body_base64;
+        const auto package = PGS::V1::Package::parse(message);
 
-        const auto sections = message.split(".");
+        if (!package)
+            throw std::runtime_error("Invalid format.");
 
-        if (sections.size() == 4)
-        {
-            auto version_str = sections.at(2);
+        const auto encryption_service = create_encryption_service(
+                package.value()->encryption()->version(), create_entropy_context()->source);
 
-            if (!version_str.startsWith("enc-v"))
-                throw std::runtime_error("Invalid format.");
-
-            version_str.remove(0, 5);
-
-            version = static_cast<PGS::EncryptionVersion>(version_str.toInt());
-
-            if (version < PGS::EncryptionVersion::EncryptionV1 ||
-                version > PGS::EncryptionVersion::EncryptionV2)
-                    throw std::runtime_error("Invalid format.");
-
-            body_base64 = sections.at(3).toStdString();
-        }
-        else
-        {
-            version = PGS::EncryptionVersion::EncryptionV1;
-            body_base64 = message.toStdString();
-        }
-
-        body_base64.erase(
-                std::remove_if(body_base64.begin(), body_base64.end(), [](const auto ch) {
-                    return std::isspace(ch, std::locale::classic());
-                }),
-                body_base64.end());
-
-        const auto body = Base::Encoding::decode_base64_any(body_base64);
-
-        if (!body)
-            throw std::runtime_error("Invalid body format.");
-
-        const auto encryption_service = create_encryption_service(version, create_entropy_context()->source);
-
-        const auto data = encryption_service->decrypt(body.value());
+        const auto data = encryption_service->decrypt(package.value()->body());
 
         ui->secret_line_edit->setText(
                 QString::fromUtf8(

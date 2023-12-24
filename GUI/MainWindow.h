@@ -5,6 +5,7 @@
 #include "Core/EntropySource.h"
 #include "Core/EncryptionService.h"
 #include "PGS/Constants.h"
+#include "PGS/V1/EntropySourceInfo.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -35,7 +36,7 @@ namespace GUI {
         };
 
         typedef struct {
-            std::string entropy_id;
+            std::shared_ptr<PGS::V1::EntropySourceInfo> info;
             std::shared_ptr<Core::EntropySource> source;
         } EntropyContext;
 
