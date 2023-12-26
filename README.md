@@ -6,7 +6,7 @@ A GUI application for Mac and Linux which aims to provide a set of operations fo
 
 Handling dozens of secrets in a secure and convenient way may represent quite a challenge nowadays.
 This application is another approach to ease this difficulty while pursuing strong cryptographical standards.
-The design goal of this utility is to provide a set of common operations that can be combined together to get the result.
+The design goal of this utility is to provide a set of common operations that can be combined to get the desired result.
 
 ## Features
 
