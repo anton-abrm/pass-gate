@@ -15,34 +15,33 @@
 #include <QDropEvent>
 #include <QMimeData>
 
-#include <GUI/PinDialog.h>
-#include <PKI/PKCS11Provider.h>
-#include <PKI/PKCS12Provider.h>
-#include <PKI/HostRandomNumberGenerator.h>
-#include <PKI/PEMProvider.h>
-#include <Password/Password.h>
-#include <Keyboard/Keyboard.h>
-#include "Crypto/BIP39.h"
-#include <Crypto/Crypto.h>
-#include "SecretFormatter.h"
-
+#include "Base/Encoding.h"
 #include "Core/BIP39EntropySource.h"
 #include "Core/BIP39EntropySourceV2.h"
+#include "Core/EncryptionServiceV1.h"
+#include "Core/EncryptionServiceV2.h"
+#include "Core/MemoryRandomNumberGenerator.h"
 #include "Core/RandomEntropySource.h"
 #include "Core/SignatureEntropySourceV2.h"
-#include "Core/EncryptionServiceV2.h"
-#include "Core/EncryptionServiceV1.h"
-#include "Base/Encoding.h"
-#include "Crypto/Shamir.h"
+#include "Crypto/BIP39.h"
+#include "Crypto/Crypto.h"
 #include "Crypto/SLIP39.h"
-#include "Core/MemoryRandomNumberGenerator.h"
+#include "Crypto/Shamir.h"
+#include "GUI/PinDialog.h"
+#include "GUI/SecretFormatter.h"
+#include "GUI/WidgetUtil.h"
+#include "Keyboard/Keyboard.h"
+#include "PGS/V1/BIP39EntropySourceInfo.h"
 #include "PGS/V1/Package.h"
 #include "PGS/V1/RandomEntropySource.h"
 #include "PGS/V1/SignatureEntropySourceInfo.h"
-#include "PGS/V1/BIP39EntropySourceInfo.h"
-#include "GUI/WidgetUtil.h"
+#include "PKI/HostRandomNumberGenerator.h"
+#include "PKI/PEMProvider.h"
+#include "PKI/PKCS11Provider.h"
+#include "PKI/PKCS12Provider.h"
+#include "Password/Password.h"
 
-#include <Version.h>
+#include "Version.h"
 
 static const QString c_config_name = "pass-gate";
 static const QString c_config_pkcs11_provider = "pkcs11-provider";
