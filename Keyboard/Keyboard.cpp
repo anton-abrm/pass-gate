@@ -23,6 +23,7 @@ namespace Keyboard {
         Window active_window{0};
 
         xdo_select_window_with_click(xdo.get(), &active_window);
+        xdo_focus_window(xdo.get(), active_window);
         xdo_click_window(xdo.get(), active_window, 1);
 
         usleep(100000);
