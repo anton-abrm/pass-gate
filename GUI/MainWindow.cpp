@@ -178,6 +178,20 @@ namespace GUI {
         ui->entropy_format_combo_box->setFont(font);
         ui->command_combo_box->setFont(font);
         ui->password_format_combo_box->setFont(font);
+
+        if (QCoreApplication::arguments().size() > 1 &&
+            QCoreApplication::arguments().at(1) == "-") {
+
+            std::string s;
+            std::cin >> s;
+
+            try {
+                set_secret_file_content(QString::fromStdString(s));
+            }
+            catch (const std::runtime_error& ex) {
+                QMessageBox::warning(this, "Error", ex.what());
+            }
+        }
     }
 
     MainWindow::~MainWindow() {
@@ -1199,15 +1213,20 @@ namespace GUI {
 
         QTextStream stream(&file);
 
-        ui->data_plain_edit->setPlainText(
-                stream.readAll().trimmed());
+        set_secret_file_content(
+            stream.readAll().trimmed());
 
         g_secret_path = file_path;
 
         update_window_title();
+    }
+
+    void MainWindow::set_secret_file_content(const QString& content) {
+
+        ui->data_plain_edit->setPlainText(content);
 
         const auto package = PGS::V1::Package::parse(
-                ui->data_plain_edit->toPlainText().trimmed().toStdString());
+            ui->data_plain_edit->toPlainText().trimmed().toStdString());
 
         if (!package)
             return;
@@ -1245,6 +1264,7 @@ namespace GUI {
                     ui->entropy_type_combo_box, static_cast<int>(PGS::EntropySourceType::Random));
             return;
         }
+
     }
 
     void MainWindow::update_save_button_status()

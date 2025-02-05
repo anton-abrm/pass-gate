@@ -69,6 +69,7 @@ namespace GUI {
         void update_save_button_status();
         void reset_key_combo_box(bool append_pinned);
         void load_secret_file(const QString &file_path);
+        void set_secret_file_content(const QString &content);
         bool prompt_warning_yes_no(const QString &text);
 
         void reset_format_combo_box_for_password();
