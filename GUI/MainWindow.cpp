@@ -179,19 +179,25 @@ namespace GUI {
         ui->command_combo_box->setFont(font);
         ui->password_format_combo_box->setFont(font);
 
-        if (QCoreApplication::arguments().size() > 1 &&
-            QCoreApplication::arguments().at(1) == "-") {
+        if (QCoreApplication::arguments().contains("-")) {
 
             std::string s;
             std::cin >> s;
 
             try {
-                set_secret_file_content(QString::fromStdString(s));
+                if (QCoreApplication::arguments().contains("-s")) {
+                    ui->secret_line_edit->setText(QString::fromStdString(s));
+                }
+                else {
+                    set_secret_file_content(QString::fromStdString(s));
+                }
             }
             catch (const std::runtime_error& ex) {
                 QMessageBox::warning(this, "Error", ex.what());
             }
         }
+
+
     }
 
     MainWindow::~MainWindow() {
