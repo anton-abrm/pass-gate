@@ -468,6 +468,9 @@ namespace GUI {
         if (!file.open(QIODevice::WriteOnly))
             throw std::runtime_error("Unable to open the file for saving.");
 
+        if (!file.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner))
+            throw std::runtime_error("Unable to set file permissions.");
+
         if (file.write(reinterpret_cast<const char *>(seed.data()), static_cast<qint64>(seed.size())) != seed.size())
             throw std::runtime_error("An error occurred while writing the keyfile.");
     }
