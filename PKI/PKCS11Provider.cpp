@@ -14,7 +14,6 @@ static constexpr size_t c_max_certificate_size = 4096;
 static constexpr size_t c_max_signature_size = 4096;
 
 static std::function<bool(std::string &)> pin_callback;
-static std::function<void()> slot_callback;
 static std::string g_provider;
 
 static std::vector<uint8_t> x509_get_rsa_modulus(X509 &x509) {
@@ -74,13 +73,6 @@ static PKCS11H_BOOL pkcs11h_token_prompt(
         IN  [[maybe_unused]] const unsigned retry
 ) {
     throw std::logic_error("Token not inserted");
-}
-
-static void pkcs11h_slot_event(
-        IN  [[maybe_unused]] void *const global_data
-) {
-    if (slot_callback)
-        slot_callback();
 }
 
 static PKCS11H_BOOL pkcs11h_pin_prompt(
@@ -168,9 +160,6 @@ namespace PKI {
                     pkcs11h_setPINPromptHook(
                             pkcs11h_pin_prompt, nullptr));
 
-        check_ck_rv("Unable to register slot event hook.",
-                    pkcs11h_setSlotEventHook(
-                            pkcs11h_slot_event, nullptr));
 
         check_ck_rv("Unable to register provider.",
                     pkcs11h_addProvider(
@@ -196,10 +185,6 @@ namespace PKI {
 
     void PKCS11Provider::set_pin_callback(std::function<bool(std::string &)> callback) {
         pin_callback = std::move(callback);
-    }
-
-    void PKCS11Provider::set_slot_callback(std::function<void()> callback) {
-        slot_callback = std::move(callback);
     }
 
     std::vector<Core::PublicKeyInfo> PKCS11Provider::get_certificates() const {

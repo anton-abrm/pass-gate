@@ -141,10 +141,6 @@ void PKI::PKIContainer::set_pin_callback(std::function<bool(std::string &)> call
     m_pin_callback = std::move(callback);
 }
 
-void PKI::PKIContainer::set_slot_callback(std::function<void()> callback)
-{
-}
-
 bool PKI::PKIContainer::is_initialized() const {
     return m_initialized;
 }

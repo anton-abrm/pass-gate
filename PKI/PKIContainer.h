@@ -20,8 +20,6 @@ namespace PKI
 
         void set_pin_callback(std::function<bool(std::string &)> callback) override;
 
-        void set_slot_callback(std::function<void()> callback) override;
-
         bool is_initialized() const override;
 
     protected:

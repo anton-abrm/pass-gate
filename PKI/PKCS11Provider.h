@@ -33,8 +33,6 @@ public:
     Base::ZBytes sign(std::span<const uint8_t> id, std::span<const uint8_t> data) const override;
 
     void set_pin_callback(std::function<bool(std::string &)> callback) override;
-    void set_slot_callback(std::function<void()> callback) override;
-
 
 private:
     bool m_initialized {false};

@@ -50,7 +50,7 @@ namespace GUI {
                 PGS::EncryptionVersion version,
                 std::shared_ptr<Core::EntropySource> source) const;
 
-        void apply_provider();
+        void reset_provider();
         void update_certificates();
 
         void encrypt();

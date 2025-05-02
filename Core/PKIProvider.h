@@ -30,7 +30,6 @@ public:
     virtual Base::ZBytes sign(std::span<const uint8_t> id, std::span<const uint8_t> data) const = 0;
 
     virtual void set_pin_callback(std::function<bool(std::string &)> callback) = 0;
-    virtual void set_slot_callback(std::function<void()> callback) = 0;
 
     virtual ~PKIProvider();
 };

@@ -209,9 +209,18 @@ namespace GUI {
     void MainWindow::go_button_clicked() {
 
         try {
+            if (!g_provider->is_initialized()) {
+                reset_provider();
+                update_certificates();
+            }
+        }
+        catch (const std::exception &ex) {
+            reset_key_combo_box(true);
+            QMessageBox::warning(this, "Error", ex.what());
+            return;
+        }
 
-            if (!g_provider->is_initialized())
-                apply_provider();
+        try {
 
             switch (current_command()) {
 
@@ -646,7 +655,14 @@ namespace GUI {
 
     void MainWindow::apply_button_clicked() {
 
-        apply_provider();
+        try {
+            reset_provider();
+            update_certificates();
+        }
+        catch (const std::runtime_error& ex) {
+            reset_key_combo_box(true);
+            QMessageBox::warning(this, "Error", ex.what());
+        }
 
         this->ui->apply_button->setText("Done");
 
@@ -723,7 +739,7 @@ namespace GUI {
         return PKI::PKCS11Provider::instance();
     }
 
-    void MainWindow::apply_provider() {
+    void MainWindow::reset_provider() {
 
         // A segmentation fault error is thrown while
         // enumerating certificates for the second time
@@ -736,41 +752,28 @@ namespace GUI {
         const auto provider_path = ui->pkcs11_combo_box->currentText().trimmed();
 
         if (!provider_path.isEmpty()) {
-            try {
 
-                g_provider = get_provider(provider_path);
+            g_provider = get_provider(provider_path);
 
-                g_rnd = std::dynamic_pointer_cast<Core::RandomNumberGenerator>(g_provider)
-                    ? std::dynamic_pointer_cast<Core::RandomNumberGenerator>(g_provider)
-                    : PKI::HostRandomNumberGenerator::instance();
+            g_rnd = std::dynamic_pointer_cast<Core::RandomNumberGenerator>(g_provider)
+                ? std::dynamic_pointer_cast<Core::RandomNumberGenerator>(g_provider)
+                : PKI::HostRandomNumberGenerator::instance();
 
-                g_provider->set_pin_callback([this](std::string &pin) -> bool {
+            g_provider->set_pin_callback([this](std::string &pin) -> bool {
 
-                    PinDialog dlg(this);
+                PinDialog dlg(this);
 
-                    dlg.setModal(true);
+                dlg.setModal(true);
 
-                    if (!dlg.exec())
-                        return false;
+                if (!dlg.exec())
+                    return false;
 
-                    pin = dlg.pin().toStdString();
+                pin = dlg.pin().toStdString();
 
-                    return true;
-                });
+                return true;
+            });
 
-                g_provider->set_slot_callback([this]() {
-                    QTimer::singleShot(0, this, &MainWindow::update_certificates);
-                });
-
-                g_provider->initialize(provider_path.toStdString());
-
-            }
-            catch (const std::exception &ex) {
-                QMessageBox::warning(this, "Error", ex.what());
-                return;
-            }
-
-            update_certificates();
+            g_provider->initialize(provider_path.toStdString());
         }
 
         QSettings settings(c_config_name, c_config_name);
