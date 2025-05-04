@@ -23,7 +23,7 @@ public:
 private:
     std::string m_common_name;
     std::vector<uint8_t> m_id;
-    std::array<uint8_t, public_key_token_size> m_public_key_token;
+    std::array<uint8_t, public_key_token_size> m_public_key_token {};
 };
 
 }

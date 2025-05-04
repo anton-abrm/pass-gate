@@ -4,334 +4,238 @@
 #include <memory>
 #include <dlfcn.h>
 
-#include <openssl/x509.h>
-#include <openssl/asn1.h>
+#include "Base/ZString.h"
 
-#include <pkcs11-helper-1.0/pkcs11.h>
-#include <pkcs11-helper-1.0/pkcs11h-certificate.h>
-
-static constexpr size_t c_max_certificate_size = 4096;
 static constexpr size_t c_max_signature_size = 4096;
 
-static std::function<bool(std::string &)> pin_callback;
-static std::string g_provider;
-
-static std::vector<uint8_t> x509_get_rsa_modulus(X509 &x509) {
-
-    std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> evp_pkey(
-            X509_get_pubkey(&x509),
-            &EVP_PKEY_free);
-
-    std::unique_ptr<RSA, decltype(&RSA_free)> rsa(
-            EVP_PKEY_get1_RSA(evp_pkey.get()),
-            &RSA_free);
-
-    const BIGNUM *n = RSA_get0_n(rsa.get());
-
-    std::vector<uint8_t> result(BN_num_bytes(n));
-
-    BN_bn2bin(n, result.data());
-
-    return result;
+static std::runtime_error create_error(const std::string &error_message, const CK_RV rv) {
+    return std::runtime_error(error_message + " " + PKI::PKCS11Helper::get_message(rv));
 }
 
-static std::string_view x509_get_common_name(X509 &x509) {
+static std::runtime_error create_error(const std::string &error_message) {
+    return std::runtime_error(error_message);
+}
 
-    X509_NAME *subject = X509_get_subject_name(&x509);
+static CK_OBJECT_HANDLE find_private_key(CK_FUNCTION_LIST_PTR pkcs11_ptr, CK_SESSION_HANDLE session_handle, std::span<const uint8_t> id) {
 
-    for (int i = 0; i < X509_NAME_entry_count(subject); i++) {
+    CK_OBJECT_CLASS object_class = CKO_PRIVATE_KEY;
+    CK_BBOOL true_bool = CK_TRUE;
 
-        X509_NAME_ENTRY *nameEntry = X509_NAME_get_entry(subject, i);
-        ASN1_OBJECT *obj = X509_NAME_ENTRY_get_object(nameEntry);
+    std::array search_attributes = {
+        CK_ATTRIBUTE { CKA_CLASS, &object_class, sizeof(object_class)},
+        CK_ATTRIBUTE { CKA_SIGN, &true_bool, sizeof(true_bool)},
+        CK_ATTRIBUTE { CKA_ID, const_cast<CK_BYTE_PTR>(id.data()), id.size()},
+    };
 
-        if (OBJ_obj2nid(obj) == NID_commonName) {
-
-            ASN1_STRING *d = X509_NAME_ENTRY_get_data(nameEntry);
-
-            return {
-                    reinterpret_cast<const char *>(ASN1_STRING_get0_data(d)),
-                    static_cast<std::string_view::size_type>(ASN1_STRING_length(d))
-            };
-        }
+    if (const auto rv = pkcs11_ptr->C_FindObjectsInit(session_handle, search_attributes.data(), search_attributes.size()); rv != CKR_OK) {
+        throw create_error("Unable to initialize the search of the private key.", rv);
     }
 
-    return {};
-}
+    CK_OBJECT_HANDLE private_key_handle{ CK_INVALID_HANDLE };
+    CK_ULONG objects_found {0};
 
-static void check_ck_rv(const char *message, CK_RV rv) {
-    if (rv != CKR_OK)
-        throw std::runtime_error(
-                std::string(message) +
-                std::string(" ") +
-                std::string(pkcs11h_getMessage(rv)));
-}
-
-static PKCS11H_BOOL pkcs11h_token_prompt(
-        IN  [[maybe_unused]] void *const global_data,
-        IN  [[maybe_unused]] void *const user_data,
-        IN  [[maybe_unused]] pkcs11h_token_id_t token,
-        IN  [[maybe_unused]] const unsigned retry
-) {
-    throw std::logic_error("Token not inserted");
-}
-
-static PKCS11H_BOOL pkcs11h_pin_prompt(
-        IN [[maybe_unused]] void *const global_data,
-        IN [[maybe_unused]] void *const user_data,
-        IN [[maybe_unused]] pkcs11h_token_id_t token,
-        IN [[maybe_unused]] const unsigned retry,
-        OUT char *const pin,
-        IN const size_t pin_max
-) {
-
-    if (!pin_callback)
-        return false;
-
-    std::string pass;
-
-    if (!pin_callback(pass))
-        return false;
-
-    if (pin_max < pass.size())
-        throw std::logic_error("Password too long");
-
-    pass.copy(pin, pass.size());
-
-    pin[pass.size()] = '\0';
-
-    return true;
-}
-
-static int generate_random_internal(const char *pkcs11_path, int reader_index, unsigned char *random_data, size_t random_length) {
-
-    int error_code = 1;
-
-    CK_FUNCTION_LIST pkcs11 = {0};
-    CK_SESSION_HANDLE session = NULL_PTR;
-    bool pkcs11_initialized = false;
-
-    void *pkcs11_handle = dlopen(pkcs11_path, RTLD_LAZY);
-
-    if (!pkcs11_handle) {
-        goto clean;
+    if (const auto rv = pkcs11_ptr->C_FindObjects(session_handle, &private_key_handle, 1, &objects_found); rv != CKR_OK) {
+        throw create_error("An error occurred while searching the private key.", rv);
     }
 
-    pkcs11_initialized = (pkcs11.C_Initialize = (CK_C_Initialize) dlsym(pkcs11_handle, "C_Initialize")) &&
-                         (pkcs11.C_OpenSession = (CK_C_OpenSession) dlsym(pkcs11_handle, "C_OpenSession")) &&
-                         (pkcs11.C_GenerateRandom = (CK_C_GenerateRandom) dlsym(pkcs11_handle, "C_GenerateRandom")) &&
-                         (pkcs11.C_CloseSession = (CK_C_CloseSession) dlsym(pkcs11_handle, "C_CloseSession")) &&
-                         (pkcs11.C_Finalize = (CK_C_Finalize) dlsym(pkcs11_handle, "C_Finalize"));
-
-    if (!pkcs11_initialized) {
-        goto clean;
+    if (const auto rv =pkcs11_ptr->C_FindObjectsFinal(session_handle); rv != CKR_OK) {
+        throw create_error("Unable to finalise the search of the private key.", rv);
     }
 
-    if ((*pkcs11.C_OpenSession)(reader_index, CKF_SERIAL_SESSION, NULL_PTR, NULL_PTR, &session) != CKR_OK)
-        goto clean;
+    if (objects_found) {
+        return private_key_handle;
+    }
 
-    if ((*pkcs11.C_GenerateRandom)(session, random_data, random_length) != CKR_OK)
-        goto clean;
-
-    error_code = 0;
-
-    clean:
-
-    if (pkcs11.C_CloseSession && session)
-        (*pkcs11.C_CloseSession)(session);
-
-    if (pkcs11_handle)
-        dlclose(pkcs11_handle);
-
-    return error_code;
+    return CK_INVALID_HANDLE;
 }
 
 namespace PKI {
 
     void PKCS11Provider::initialize(std::string_view provider) {
 
-        check_ck_rv("Unable to initialize PKI library.",
-                    pkcs11h_initialize());
+        try {
 
-        check_ck_rv("Unable to register token prompt hook.",
-                    pkcs11h_setTokenPromptHook(
-                            pkcs11h_token_prompt, nullptr));
+            m_pkcs11_handle = dlopen(std::string(provider).c_str(), RTLD_LAZY);
 
-        check_ck_rv("Unable to register pin prompt hook.",
-                    pkcs11h_setPINPromptHook(
-                            pkcs11h_pin_prompt, nullptr));
+            if (!m_pkcs11_handle) {
+                throw create_error("Unable to obtain PKCS11 library handle.");
+            }
 
+            // https://pubs.opengroup.org/onlinepubs/009695399/functions/dlsym.html
+            CK_C_GetFunctionList get_fn_list_ptr {nullptr};
 
-        check_ck_rv("Unable to register provider.",
-                    pkcs11h_addProvider(
-                            "",
-                            std::string(provider).c_str(),
-                            FALSE,
-                            PKCS11H_PRIVATEMODE_MASK_AUTO,
-                            PKCS11H_SLOTEVENT_METHOD_AUTO,
-                            0,
-                            FALSE
-                    ));
+            if (*(void **)(&get_fn_list_ptr) = dlsym(m_pkcs11_handle, "C_GetFunctionList"); !get_fn_list_ptr) {
+                throw create_error("Unable to find C_GetFunctionList.");
+            }
 
-        g_provider = provider;
+            if (const auto rv = get_fn_list_ptr(&m_pkcs11_ptr); rv != CKR_OK) {
+                throw create_error("Unable to bind function pointers.", rv);
+            }
 
-        m_initialized = true;
+            if (const auto rv = m_pkcs11_ptr->C_Initialize(NULL_PTR); rv != CKR_OK) {
+                throw create_error("Unable to initialize PKCS11 library.", rv);
+            }
+
+            if (const auto rv = m_pkcs11_ptr->C_OpenSession(0, CKF_SERIAL_SESSION, NULL_PTR, NULL_PTR, &m_session_handle); rv != CKR_OK) {
+                throw create_error("Unable to open PKCS11 session.", rv);
+            }
+
+            m_initialized = true;
+        }
+        catch (const std::runtime_error&) {
+            terminate();
+            throw;
+        }
     }
 
     void PKCS11Provider::terminate() {
-        check_ck_rv("Unable to terminate PKI library.",
-                    pkcs11h_terminate());
+
         m_initialized = false;
+
+        if (m_session_handle != CK_INVALID_HANDLE) {
+            m_pkcs11_ptr->C_CloseSession(m_session_handle);
+            m_session_handle = CK_INVALID_HANDLE;
+        }
+
+        if (m_pkcs11_ptr) {
+            m_pkcs11_ptr->C_Finalize(NULL_PTR);
+            m_pkcs11_ptr = nullptr;
+        }
+
+        if (m_pkcs11_handle) {
+            dlclose(m_pkcs11_handle);
+            m_pkcs11_handle = nullptr;
+        }
     }
 
     void PKCS11Provider::set_pin_callback(std::function<bool(std::string &)> callback) {
-        pin_callback = std::move(callback);
+        m_pin_callback = std::move(callback);
     }
 
     std::vector<Core::PublicKeyInfo> PKCS11Provider::get_certificates() const {
 
-        std::vector<Core::PublicKeyInfo> cert_infos;
+        CK_OBJECT_CLASS object_class = CKO_PUBLIC_KEY;
 
-        pkcs11h_certificate_id_list_t cert_ids_ptr{nullptr};
+        std::array search_attributes = {
+            CK_ATTRIBUTE { CKA_CLASS, &object_class, sizeof(object_class)},
+        };
 
-        check_ck_rv("Unable to get certificates.",
-                    pkcs11h_certificate_enumCertificateIds(
-                            PKCS11H_ENUM_METHOD_CACHE,
-                            nullptr,
-                            PKCS11H_PROMPT_MASK_ALLOW_ALL,
-                            nullptr,
-                            &cert_ids_ptr));
+        if (const auto rv = m_pkcs11_ptr->C_FindObjectsInit(m_session_handle, search_attributes.data(), search_attributes.size()); rv != CKR_OK) {
+            throw create_error("Unable to initialize the search of the public key.", rv);
+        }
 
-        std::unique_ptr<pkcs11h_certificate_id_list_s, decltype(&pkcs11h_certificate_freeCertificateIdList)>
-                cert_ids(cert_ids_ptr, &pkcs11h_certificate_freeCertificateIdList);
+        std::vector<CK_OBJECT_HANDLE> object_handles(256);
+        CK_ULONG objects_found {0};
 
-        for (auto cert_id = cert_ids.get(); cert_id != nullptr; cert_id = cert_id->next) {
+        if (const auto rv = m_pkcs11_ptr->C_FindObjects(m_session_handle, object_handles.data(), object_handles.size(), &objects_found); rv != CKR_OK) {
+            throw create_error("An error occurred while searching the public key.", rv);
+        }
 
-            pkcs11h_certificate_t cert_ptr{nullptr};
+        if (const auto rv = m_pkcs11_ptr->C_FindObjectsFinal(m_session_handle); rv != CKR_OK) {
+            throw create_error("Unable to finalise the search of the public key.", rv);
+        }
 
-            check_ck_rv("Unable to create cert_ptr.",
-                        pkcs11h_certificate_create(
-                                cert_id->certificate_id,
-                                nullptr,
-                                PKCS11H_PROMPT_MASK_ALLOW_ALL,
-                                PKCS11H_PIN_CACHE_INFINITE,
-                                &cert_ptr));
+        object_handles.resize(objects_found);
 
-            std::unique_ptr<pkcs11h_certificate_s, decltype(&pkcs11h_certificate_freeCertificate)>
-                    cert(cert_ptr, &pkcs11h_certificate_freeCertificate);
+        std::vector<Core::PublicKeyInfo> infos;
 
-            size_t certificate_size{c_max_certificate_size};
-            auto certificate_blob{std::make_unique<unsigned char[]>(certificate_size)};
+        for (const auto object_handle: object_handles) {
 
-            check_ck_rv("Unable to get cert_ptr blob.",
-                        pkcs11h_certificate_getCertificateBlob(
-                                cert.get(),
-                                certificate_blob.get(),
-                                &certificate_size));
+            std::array attributes = {
+                CK_ATTRIBUTE{CKA_ID, NULL_PTR, 0},
+                CK_ATTRIBUTE{CKA_LABEL, NULL_PTR, 0},
+                CK_ATTRIBUTE{CKA_MODULUS, NULL_PTR, 0},
+            };
 
-            std::unique_ptr<BIO, decltype(&BIO_free)> bio(
-                    BIO_new_mem_buf(
-                            certificate_blob.get(),
-                            static_cast<int>(certificate_size)),
-                    &BIO_free);
+            if (const auto rv = m_pkcs11_ptr->C_GetAttributeValue(m_session_handle, object_handle, attributes.data(), attributes.size()); rv != CKR_OK) {
+                throw create_error("Unable to get key attributes.", rv);
+            }
 
-            X509 *x509_ptr{nullptr};
+            std::vector<CK_BYTE> id(attributes[0].ulValueLen);
+            attributes[0].pValue = id.data();
 
-            d2i_X509_bio(bio.get(), &x509_ptr);
+            std::vector<CK_UTF8CHAR> label(attributes[1].ulValueLen);
+            attributes[1].pValue = label.data();
 
-            std::unique_ptr<X509, decltype(&X509_free)> x509(
-                    x509_ptr,
-                    &X509_free);
+            std::vector<CK_BYTE> modulus(attributes[2].ulValueLen);
+            attributes[2].pValue = modulus.data();
 
-            int pk_nid = 0;
-
-            X509_get_signature_info(x509.get(), NULL, &pk_nid, NULL, NULL);
-
-            if (pk_nid != NID_rsaEncryption)
-                continue;
-
-            Core::PublicKeyInfo cert_info;
-
-            const auto id = std::span<const uint8_t>(
-                    cert_id->certificate_id->attrCKA_ID,
-                    cert_id->certificate_id->attrCKA_ID_size);
-
-            const auto rsa_modulus = x509_get_rsa_modulus(*x509);
-            const auto common_name = x509_get_common_name(*x509);
+            if (const auto rv = m_pkcs11_ptr->C_GetAttributeValue(m_session_handle, object_handle, attributes.data(), attributes.size()); rv != CKR_OK) {
+                throw create_error("Unable to get key attributes.", rv);
+            }
 
             std::array<uint8_t, Core::PublicKeyInfo::public_key_token_size> public_key_token {0};
 
             std::copy_n(
-                    rsa_modulus.begin(),
+                    modulus.begin(),
                     public_key_token.size(),
                     public_key_token.begin());
 
-            cert_info.set_id(id);
-            cert_info.set_common_name(common_name);
-            cert_info.set_public_key_token(public_key_token);
+            Core::PublicKeyInfo pki;
 
-            cert_infos.push_back(std::move(cert_info));
+            pki.set_id(id);
+            pki.set_common_name({reinterpret_cast<char*>(label.data()), label.size()});
+            pki.set_public_key_token(public_key_token);
+
+            infos.push_back(pki);
         }
 
-        return cert_infos;
+        return infos;
     }
 
     Base::ZBytes PKCS11Provider::sign(std::span<const uint8_t> id, std::span<const uint8_t> data) const
     {
-        pkcs11h_certificate_id_list_t cert_ids{nullptr};
+        auto private_key_handle = find_private_key(m_pkcs11_ptr, m_session_handle, id);
 
-        std::unique_ptr<pkcs11h_certificate_id_list_s, decltype(&pkcs11h_certificate_freeCertificateIdList)>
-                certificates_guard(cert_ids, &pkcs11h_certificate_freeCertificateIdList);
+        if (private_key_handle == CK_INVALID_HANDLE) {
 
-        check_ck_rv("Unable to get cert_ids.",
-                    pkcs11h_certificate_enumCertificateIds(
-                            PKCS11H_ENUM_METHOD_CACHE,
-                            nullptr,
-                            PKCS11H_PROMPT_MASK_ALLOW_ALL,
-                            nullptr,
-                            &cert_ids));
+            CK_SESSION_INFO info {};
 
-        pkcs11h_certificate_t result{nullptr};
+            if (const auto rv = m_pkcs11_ptr->C_GetSessionInfo(m_session_handle, &info); rv != CKR_OK)
+                throw create_error("Unable to get session info.", rv);
 
-        for (auto cert_id = cert_ids; cert_id != nullptr; cert_id = cert_id->next) {
+            if (info.state != CKS_RO_PUBLIC_SESSION)
+                throw create_error("The private key was not found.");
 
-            const std::span<const uint8_t> current_id(
-                    cert_id->certificate_id->attrCKA_ID,
-                    cert_id->certificate_id->attrCKA_ID_size);
+            if (!m_pin_callback)
+                throw create_error("There is no pin callback set.");
 
-            if (id.size() != current_id.size())
-                continue;
+            std::string password;
 
-            if (!std::equal(id.begin(), id.end(), current_id.begin()))
-                continue;
+            if (!m_pin_callback(password))
+                throw create_error("The login operation was cancelled by the user.");
 
-            check_ck_rv("Unable to create certificate.",
-                        pkcs11h_certificate_create(
-                                cert_id->certificate_id,
-                                nullptr,
-                                PKCS11H_PROMPT_MASK_ALLOW_ALL,
-                                PKCS11H_PIN_CACHE_INFINITE,
-                                &result));
-            break;
+            if (const auto rv = m_pkcs11_ptr->C_Login(m_session_handle, CKU_USER,
+                reinterpret_cast<CK_UTF8CHAR_PTR>(password.data()), password.size()); rv != CKR_OK)
+                throw create_error("Unable to login to SC.", rv);
+
+            private_key_handle = find_private_key(m_pkcs11_ptr, m_session_handle, id);
+
+            if (private_key_handle == CK_INVALID_HANDLE)
+                throw create_error("The private key was not found.");
         }
 
-        if (result == nullptr)
-            throw std::runtime_error("Certificate not found.");
+        CK_MECHANISM mechanism = {
+            CKM_SHA512_RSA_PKCS, NULL_PTR, 0
+        };
 
-        size_t sign_size{c_max_signature_size};
+        if (const auto rv = m_pkcs11_ptr->C_SignInit(m_session_handle, &mechanism, private_key_handle); rv != CKR_OK) {
+            throw create_error("Unable to initialize the sign operation.", rv);
+        }
+
+        if (const auto rv = m_pkcs11_ptr->C_SignUpdate(m_session_handle, const_cast<CK_BYTE_PTR>(data.data()), data.size()); rv != CKR_OK) {
+            throw create_error("An error occurred during the sign operation.", rv);
+        }
+
+        CK_ULONG sign_size{c_max_signature_size};
 
         Base::ZBytes sign_blob(sign_size);
 
-        check_ck_rv("Unable to sign blob.",
-                    pkcs11h_certificate_sign(
-                            reinterpret_cast<pkcs11h_certificate_t>(result),
-                            CKM_SHA512_RSA_PKCS,
-                            data.data(),
-                            data.size(),
-                            sign_blob.data(),
-                            &sign_size
-                    ));
+        if (const auto rv = m_pkcs11_ptr->C_SignFinal(m_session_handle, sign_blob.data(), &sign_size); rv != CKR_OK) {
+            throw create_error("Unable to finalise the sign operation.", rv);
+        }
 
-        sign_blob.resize(static_cast<int>(sign_size));
+        sign_blob.resize(sign_size);
 
         return sign_blob;
     }
@@ -348,12 +252,8 @@ namespace PKI {
     }
 
     void PKCS11Provider::generate_random(std::span<uint8_t> span) {
-
-        if (g_provider.empty())
-            throw std::runtime_error("Provider is not set");
-
-        if (generate_random_internal(reinterpret_cast<const char *>(g_provider.c_str()), 0, span.data(), span.size()) != 0) {
-            throw std::runtime_error("Unable to generate random");
+        if (const auto rv = m_pkcs11_ptr->C_GenerateRandom(m_session_handle, span.data(), span.size()); rv != CKR_OK) {
+            throw create_error("Unable to generate random.", rv);
         }
     }
 

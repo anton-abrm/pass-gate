@@ -10,6 +10,7 @@
 
 #include "Core/PublicKeyInfo.h"
 #include "Core/PKIProvider.h"
+#include "PKI/PKCS11Helper.h"
 
 namespace PKI {
 
@@ -35,6 +36,13 @@ public:
     void set_pin_callback(std::function<bool(std::string &)> callback) override;
 
 private:
+
+    void * m_pkcs11_handle = nullptr;
+
+    CK_FUNCTION_LIST_PTR m_pkcs11_ptr {nullptr};
+    CK_SESSION_HANDLE m_session_handle { CK_INVALID_HANDLE };
+
     bool m_initialized {false};
+    std::function<bool(std::string &)> m_pin_callback;
 };
 }

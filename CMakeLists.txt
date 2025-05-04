@@ -14,10 +14,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if (APPLE)
     list(APPEND CMAKE_PREFIX_PATH /opt/homebrew/opt/qt5)
     list(APPEND CMAKE_PREFIX_PATH /opt/homebrew/opt/openssl)
-    list(APPEND CMAKE_PREFIX_PATH /opt/homebrew/opt/pkcs11-helper)
-
-    include_directories(/opt/homebrew/opt/pkcs11-helper/include)
-    link_directories(/opt/homebrew/opt/pkcs11-helper/lib)
 endif()
 
 find_package(Qt5 COMPONENTS Core REQUIRED)
@@ -68,13 +64,14 @@ add_executable(pass-gate
         PGS/V1/RandomEntropySource.cpp
         PGS/V1/EncryptionInfo.cpp
         GUI/WidgetUtil.cpp
+        PKI/PKCS11Helper.cpp
+        PKI/PKCS11Helper.h
 )
 
 target_link_libraries(pass-gate
         Qt5::Core
         Qt5::Widgets
         OpenSSL::SSL
-        pkcs11-helper
         )
 
 if(LINUX)

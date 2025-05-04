@@ -32,7 +32,6 @@ The utility may use one of the following entropy sources for performing cryptogr
 * [Qt5](https://www.qt.io)
 * [OpenSSL](https://www.openssl.org/)
 * [xdotool](https://github.com/jordansissel/xdotool)
-* [pkcs11-helper](https://github.com/OpenSC/pkcs11-helper)
 
 ## Screenshot
 
