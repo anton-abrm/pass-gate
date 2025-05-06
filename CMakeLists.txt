@@ -12,12 +12,12 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if (APPLE)
-    list(APPEND CMAKE_PREFIX_PATH /opt/homebrew/opt/qt5)
+    list(APPEND CMAKE_PREFIX_PATH /opt/homebrew/opt/qt6)
     list(APPEND CMAKE_PREFIX_PATH /opt/homebrew/opt/openssl)
 endif()
 
-find_package(Qt5 COMPONENTS Core REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core REQUIRED)
+find_package(Qt6 COMPONENTS Widgets REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 add_executable(pass-gate
@@ -71,8 +71,8 @@ add_executable(pass-gate
 )
 
 target_link_libraries(pass-gate
-        Qt5::Core
-        Qt5::Widgets
+        Qt6::Core
+        Qt6::Widgets
         OpenSSL::SSL
         )
 

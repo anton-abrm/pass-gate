@@ -29,7 +29,7 @@ The utility may use one of the following entropy sources for performing cryptogr
 
 ## Dependencies
 
-* [Qt5](https://www.qt.io)
+* [Qt6](https://www.qt.io)
 * [OpenSSL](https://www.openssl.org/)
 * [xdotool](https://github.com/jordansissel/xdotool)
 

@@ -21,6 +21,7 @@ static QPalette create_dark_palette() {
     palette.setColor(QPalette::Link, QColor(42, 130, 218));
     palette.setColor(QPalette::Highlight, QColor(42, 130, 218));
     palette.setColor(QPalette::HighlightedText, Qt::white);
+    palette.setColor(QPalette::PlaceholderText, Qt::gray);
 
     return palette;
 }
@@ -35,6 +36,8 @@ static QFont get_font() {
 }
 
 int main(int argc, char *argv[]) {
+
+    qputenv("QT_ENABLE_HIGHDPI_SCALING", "0");
 
     QApplication app(argc, argv);
     QApplication::setStyle("fusion");
