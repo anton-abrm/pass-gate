@@ -29,7 +29,7 @@ static std::map<char, uint8_t> generate_hhhs_lookup() {
     std::map<char, uint8_t> result;
 
     for (std::size_t i = 0; i < c_hhhs.length(); ++i) {
-        result[c_hhhs[i]] = i;
+        result[c_hhhs[i]] = static_cast<uint8_t>(i);
     }
 
     return result;
@@ -177,7 +177,7 @@ static std::optional<std::vector<std::string_view>> parse_params(const std::stri
     }
 
     for (size_t i = 0; i < format_part.size(); i++) {
-        const auto alphabet = get_alphabet(i, format_part[i]);
+        const auto alphabet = get_alphabet(static_cast<uint8_t>(i), format_part[i]);
         if (!alphabet)
             return std::nullopt;
 

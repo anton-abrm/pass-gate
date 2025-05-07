@@ -24,10 +24,10 @@ static CK_OBJECT_HANDLE find_private_key(CK_FUNCTION_LIST_PTR pkcs11_ptr, CK_SES
     std::array search_attributes = {
         CK_ATTRIBUTE { CKA_CLASS, &object_class, sizeof(object_class)},
         CK_ATTRIBUTE { CKA_SIGN, &true_bool, sizeof(true_bool)},
-        CK_ATTRIBUTE { CKA_ID, const_cast<CK_BYTE_PTR>(id.data()), id.size()},
+        CK_ATTRIBUTE { CKA_ID, const_cast<CK_BYTE_PTR>(id.data()), static_cast<CK_ULONG>(id.size())},
     };
 
-    if (const auto rv = pkcs11_ptr->C_FindObjectsInit(session_handle, search_attributes.data(), search_attributes.size()); rv != CKR_OK) {
+    if (const auto rv = pkcs11_ptr->C_FindObjectsInit(session_handle, search_attributes.data(), static_cast<CK_ULONG>(search_attributes.size())); rv != CKR_OK) {
         throw create_error("Unable to initialize the search of the private key.", rv);
     }
 
@@ -120,14 +120,16 @@ namespace PKI {
             CK_ATTRIBUTE { CKA_CLASS, &object_class, sizeof(object_class)},
         };
 
-        if (const auto rv = m_pkcs11_ptr->C_FindObjectsInit(m_session_handle, search_attributes.data(), search_attributes.size()); rv != CKR_OK) {
+        if (const auto rv = m_pkcs11_ptr->C_FindObjectsInit(m_session_handle, search_attributes.data(),
+            static_cast<CK_ULONG>(search_attributes.size())); rv != CKR_OK) {
             throw create_error("Unable to initialize the search of the public key.", rv);
         }
 
         std::vector<CK_OBJECT_HANDLE> object_handles(256);
         CK_ULONG objects_found {0};
 
-        if (const auto rv = m_pkcs11_ptr->C_FindObjects(m_session_handle, object_handles.data(), object_handles.size(), &objects_found); rv != CKR_OK) {
+        if (const auto rv = m_pkcs11_ptr->C_FindObjects(m_session_handle, object_handles.data(),
+            static_cast<CK_ULONG>(object_handles.size()), &objects_found); rv != CKR_OK) {
             throw create_error("An error occurred while searching the public key.", rv);
         }
 
@@ -147,7 +149,8 @@ namespace PKI {
                 CK_ATTRIBUTE{CKA_MODULUS, NULL_PTR, 0},
             };
 
-            if (const auto rv = m_pkcs11_ptr->C_GetAttributeValue(m_session_handle, object_handle, attributes.data(), attributes.size()); rv != CKR_OK) {
+            if (const auto rv = m_pkcs11_ptr->C_GetAttributeValue(m_session_handle, object_handle, attributes.data(),
+                static_cast<CK_ULONG>(attributes.size())); rv != CKR_OK) {
                 throw create_error("Unable to get key attributes.", rv);
             }
 
@@ -160,7 +163,8 @@ namespace PKI {
             std::vector<CK_BYTE> modulus(attributes[2].ulValueLen);
             attributes[2].pValue = modulus.data();
 
-            if (const auto rv = m_pkcs11_ptr->C_GetAttributeValue(m_session_handle, object_handle, attributes.data(), attributes.size()); rv != CKR_OK) {
+            if (const auto rv = m_pkcs11_ptr->C_GetAttributeValue(m_session_handle, object_handle, attributes.data(),
+                static_cast<CK_ULONG>(attributes.size())); rv != CKR_OK) {
                 throw create_error("Unable to get key attributes.", rv);
             }
 
@@ -206,7 +210,7 @@ namespace PKI {
                 throw create_error("The login operation was cancelled by the user.");
 
             if (const auto rv = m_pkcs11_ptr->C_Login(m_session_handle, CKU_USER,
-                reinterpret_cast<CK_UTF8CHAR_PTR>(password.data()), password.size()); rv != CKR_OK)
+                reinterpret_cast<CK_UTF8CHAR_PTR>(password.data()), static_cast<CK_ULONG>(password.size())); rv != CKR_OK)
                 throw create_error("Unable to login to SC.", rv);
 
             private_key_handle = find_private_key(m_pkcs11_ptr, m_session_handle, id);
@@ -223,7 +227,8 @@ namespace PKI {
             throw create_error("Unable to initialize the sign operation.", rv);
         }
 
-        if (const auto rv = m_pkcs11_ptr->C_SignUpdate(m_session_handle, const_cast<CK_BYTE_PTR>(data.data()), data.size()); rv != CKR_OK) {
+        if (const auto rv = m_pkcs11_ptr->C_SignUpdate(m_session_handle, const_cast<CK_BYTE_PTR>(data.data()),
+            static_cast<CK_ULONG>(data.size())); rv != CKR_OK) {
             throw create_error("An error occurred during the sign operation.", rv);
         }
 
@@ -252,7 +257,8 @@ namespace PKI {
     }
 
     void PKCS11Provider::generate_random(std::span<uint8_t> span) {
-        if (const auto rv = m_pkcs11_ptr->C_GenerateRandom(m_session_handle, span.data(), span.size()); rv != CKR_OK) {
+        if (const auto rv = m_pkcs11_ptr->C_GenerateRandom(m_session_handle, span.data(),
+            static_cast<CK_ULONG>(span.size())); rv != CKR_OK) {
             throw create_error("Unable to generate random.", rv);
         }
     }
