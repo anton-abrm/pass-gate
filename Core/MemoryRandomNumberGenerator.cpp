@@ -6,8 +6,8 @@ void Core::MemoryRandomNumberGenerator::generate_random(std::span<uint8_t> span)
         throw std::logic_error("Not enough entropy.");
     }
 
-    std::copy(m_buffer.begin() + static_cast<ssize_t>(m_index),
-              m_buffer.begin() + static_cast<ssize_t>(m_index + span.size()),
+    std::copy(m_buffer.begin() + static_cast<Base::ZBytes::difference_type>(m_index),
+              m_buffer.begin() + static_cast<Base::ZBytes::difference_type>(m_index + span.size()),
               span.begin());
 
     m_index += span.size();

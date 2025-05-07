@@ -39,8 +39,8 @@ static Base::ZBytes transform_master_secret(
     if (bytes.size() % 2 != 0)
         throw std::invalid_argument("Cipher size must be even.");
 
-    Base::ZBytes l(bytes.begin(), bytes.begin() + static_cast<ssize_t>(bytes.size() / 2));
-    Base::ZBytes r(bytes.begin() + static_cast<ssize_t>(bytes.size() / 2), bytes.end());
+    Base::ZBytes l(bytes.begin(), bytes.begin() + static_cast<std::span<const uint8_t>::difference_type>(bytes.size() / 2));
+    Base::ZBytes r(bytes.begin() + static_cast<std::span<const uint8_t>::difference_type>(bytes.size() / 2), bytes.end());
 
     constexpr uint8_t round_count = 4;
 
