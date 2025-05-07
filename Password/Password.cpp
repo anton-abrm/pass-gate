@@ -155,7 +155,9 @@ static std::optional<std::vector<std::string_view>> parse_params(const std::stri
     const std::string_view format_part(format.data() + length_part_size, c_max_alphabets);
 
     const auto conversion_result = std::from_chars(
-            length_part.begin(), length_part.end(), password_length);
+            length_part.data(),
+            length_part.data() + length_part.size(),
+            password_length);
 
     if (conversion_result.ec == std::errc::invalid_argument)
         return std::nullopt;
