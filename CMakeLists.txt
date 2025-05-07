@@ -66,6 +66,8 @@ add_executable(pass-gate
         GUI/WidgetUtil.cpp
         PKI/PKCS11Helper.cpp
         PKI/PKCS11Helper.h
+        Base/ByteSplitter.cpp
+        Base/ByteSplitter.h
 )
 
 target_link_libraries(pass-gate

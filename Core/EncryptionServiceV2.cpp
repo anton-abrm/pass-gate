@@ -4,6 +4,7 @@
 
 #include "Crypto/Crypto.h"
 #include "Base/Encoding.h"
+#include "Base/ByteSplitter.h"
 
 static constexpr const std::size_t c_padding_block_size = 24;
 static constexpr const std::size_t c_sign_nonce_size = 16;
@@ -22,8 +23,10 @@ Base::ZBytes Core::EncryptionServiceV2::encrypt(
 
     const auto seed = m_entropy_source->get_seed(nonce_string, c_aes_gcm_key_size + c_aes_gcm_iv_size);
 
-    const auto key = std::span<const uint8_t>(seed.begin(), c_aes_gcm_key_size);
-    const auto iv = std::span<const uint8_t>(key.end(), c_aes_gcm_iv_size);
+    Core::ByteSplitter seed_splitter(seed);
+
+    const auto key = seed_splitter.next(c_aes_gcm_key_size);
+    const auto iv = seed_splitter.next(c_aes_gcm_iv_size);
 
     const auto padding_size = (c_padding_block_size - (plain.size() % c_padding_block_size)) % c_padding_block_size;
 
@@ -64,16 +67,20 @@ Core::EncryptionServiceV2::EncryptionServiceV2(
 
 Base::ZString Core::EncryptionServiceV2::decrypt(std::span<const uint8_t> body) const {
 
-    const auto nonce = std::span<const uint8_t>(body.begin(), c_sign_nonce_size);
-    const auto tag = std::span<const uint8_t>(nonce.end(), c_aes_gcm_tag_size);
-    const auto cipher = std::span<const uint8_t>(tag.end(), body.end());
+    Core::ByteSplitter body_splitter(body);
+
+    const auto nonce = body_splitter.next(c_sign_nonce_size);
+    const auto tag = body_splitter.next(c_aes_gcm_tag_size);
+    const auto cipher = body_splitter.last();
 
     const auto nonce_string = Base::Encoding::encode_base64_url_no_padding(nonce).append(m_salt);
 
     const auto seed = m_entropy_source->get_seed(nonce_string, c_aes_gcm_key_size + c_aes_gcm_iv_size);
 
-    const auto key = std::span<const uint8_t>(seed.begin(), c_aes_gcm_key_size);
-    const auto iv = std::span<const uint8_t>(key.end(), c_aes_gcm_iv_size);
+    Core::ByteSplitter seed_splitter(seed);
+
+    const auto key = seed_splitter.next(c_aes_gcm_key_size);
+    const auto iv = seed_splitter.next(c_aes_gcm_iv_size);
 
     auto plain = Crypto::decrypt_aes_256_gcm(key, iv, cipher, tag);
 
