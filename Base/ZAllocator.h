@@ -16,6 +16,10 @@ namespace Base {
 
         constexpr ZAllocator() noexcept = default;
 
+        // The current debug mechanism for containers in MSVC STL does need to allocate memory
+        // for a separated "proxy" object for each container, which always needs rebinding.
+        template<class U> ZAllocator(const ZAllocator<U>&) noexcept {}
+
         constexpr ZAllocator(const ZAllocator &) noexcept = default;
 
         T *allocate(std::size_t n) {
