@@ -37,6 +37,7 @@ static QFont get_font() {
 int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
+    QApplication::setStyle("fusion");
     QApplication::setPalette(create_dark_palette());
     QApplication::setFont(get_font());
 
