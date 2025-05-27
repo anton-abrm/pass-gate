@@ -103,6 +103,13 @@ endif()
 
 configure_file(Version.h.in Version.h @ONLY)
 
+if(LINUX)
+    include(GNUInstallDirs)
+    install(TARGETS pass-gate
+            DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif()
+
 # Tests
 set(INSTALL_GTEST OFF)
 set(BUILD_GMOCK OFF)
