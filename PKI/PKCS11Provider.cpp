@@ -76,7 +76,21 @@ namespace PKI {
                 throw create_error("Unable to initialize PKCS11 library.", rv);
             }
 
-            if (const auto rv = m_pkcs11_ptr->C_OpenSession(0, CKF_SERIAL_SESSION, NULL_PTR, NULL_PTR, &m_session_handle); rv != CKR_OK) {
+            CK_ULONG slot_count {1};
+            CK_SLOT_ID slot_id {0};
+
+            if (auto rv = m_pkcs11_ptr->C_GetSlotList(CK_TRUE, &slot_id, &slot_count); rv != CKR_OK) {
+                if (rv == CKR_BUFFER_TOO_SMALL)
+                    throw create_error("Multiple tokens are not supported.");
+
+                throw create_error("Unable to obtain the slot list.", rv);
+            }
+
+            if (slot_count == 0) {
+                throw create_error("The token is not present.");
+            }
+
+            if (const auto rv = m_pkcs11_ptr->C_OpenSession(slot_id, CKF_SERIAL_SESSION, NULL_PTR, NULL_PTR, &m_session_handle); rv != CKR_OK) {
                 throw create_error("Unable to open PKCS11 session.", rv);
             }
 
