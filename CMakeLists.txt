@@ -104,6 +104,7 @@ endif()
 configure_file(Version.h.in Version.h @ONLY)
 
 # Tests
+set(INSTALL_GTEST OFF)
 
 add_subdirectory(ThirdParty/GoogleTest)
 
