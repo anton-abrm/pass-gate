@@ -254,16 +254,6 @@
         <property name="editable">
          <bool>true</bool>
         </property>
-        <item>
-         <property name="text">
-          <string>/usr/lib/opensc-pkcs11.so</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>/usr/lib/libeTPkcs11.so</string>
-         </property>
-        </item>
        </widget>
       </item>
       <item>

@@ -102,6 +102,11 @@ namespace GUI {
 
         ui->setupUi(this);
 
+#if __linux__
+        ui->pkcs11_combo_box->addItem("/usr/lib/opensc-pkcs11.so");
+        ui->pkcs11_combo_box->addItem("/usr/lib/libeTPkcs11.so");
+#endif
+
 #ifdef __APPLE__
         ui->enter_button->setEnabled(false);
 #endif
