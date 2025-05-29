@@ -1118,15 +1118,14 @@ namespace GUI {
 
         const auto drop_event = dynamic_cast<QDropEvent*>(event);
 
-        const QString prefix = "file://";
+        auto file_path = drop_event->mimeData()->text().trimmed();
 
-        if (!drop_event->mimeData()->hasText() ||
-            !drop_event->mimeData()->text().startsWith(prefix))
+        if (!file_path.endsWith(".pgs"))
             return true;
 
-        const auto file_path = drop_event->mimeData()->text()
-                .remove(0, prefix.length())
-                .trimmed();
+        if (file_path.startsWith("file://")) {
+            file_path = QUrl(file_path).toLocalFile();
+        }
 
         try {
             load_secret_file(file_path);
