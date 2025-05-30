@@ -107,10 +107,11 @@ configure_file(Version.h.in Version.h @ONLY)
 set(INSTALL_GTEST OFF)
 set(BUILD_GMOCK OFF)
 
-add_subdirectory(ThirdParty/GoogleTest)
-
+add_subdirectory(ThirdParty/GoogleTest
+        EXCLUDE_FROM_ALL)
 
 add_executable(pass-gate-tests
+        EXCLUDE_FROM_ALL
         Base/Encoding.cpp
         Core/RandomNumberGenerator.cpp
         Core/BufferedRandomNumberGenerator.cpp
