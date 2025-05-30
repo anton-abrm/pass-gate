@@ -109,9 +109,6 @@ set(BUILD_GMOCK OFF)
 
 add_subdirectory(ThirdParty/GoogleTest)
 
-include_directories(
-        ${gtest_SOURCE_DIR}/include
-)
 
 add_executable(pass-gate-tests
         Base/Encoding.cpp
