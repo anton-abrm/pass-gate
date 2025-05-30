@@ -105,6 +105,7 @@ configure_file(Version.h.in Version.h @ONLY)
 
 # Tests
 set(INSTALL_GTEST OFF)
+set(BUILD_GMOCK OFF)
 
 add_subdirectory(ThirdParty/GoogleTest)
 
