@@ -75,8 +75,10 @@ set(PROJECT_SOURCES
 
 if (WIN32)
 
+    enable_language("RC")
     add_executable(pass-gate WIN32
             ${PROJECT_SOURCES}
+            ${CMAKE_CURRENT_SOURCE_DIR}/KeyChain.rc
     )
     set_property(TARGET pass-gate PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
