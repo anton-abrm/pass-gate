@@ -110,6 +110,8 @@ namespace GUI {
 #if __linux__
         ui->pkcs11_combo_box->addItem("/usr/lib/opensc-pkcs11.so");
         ui->pkcs11_combo_box->addItem("/usr/lib/libeTPkcs11.so");
+#elif _WIN32
+        ui->pkcs11_combo_box->addItem("C:/Program Files/OpenSC Project/OpenSC/pkcs11/opensc-pkcs11.dll");
 #endif
 
 #if defined(__APPLE__) || defined(_WIN32)
