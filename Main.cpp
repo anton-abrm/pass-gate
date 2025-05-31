@@ -30,7 +30,11 @@ static QFont get_font() {
 
     auto font = QFontDatabase::systemFont(QFontDatabase::GeneralFont);
 
+#if _WIN32
+    font.setPixelSize(18);
+#else
     font.setPixelSize(16);
+#endif
 
     return font;
 }

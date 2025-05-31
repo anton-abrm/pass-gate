@@ -53,7 +53,12 @@ static const QString c_map_key_id = "key-id";
 static const QString c_map_key_name = "key-name";
 
 static const QString c_save_load_dialog_filter = "Pass Gate Secret (*.pgs)";
+
+#if _WIN32
+static const QString c_select_provider_dialog_filter = "PKCS (*.dll *.pem *.pk8 *.p12 *.pfx)";
+#else
 static const QString c_select_provider_dialog_filter = "PKCS (*.so *.pem *.pk8 *.p12 *.pfx)";
+#endif
 
 static const std::size_t c_output_kcv_size = 4;
 
@@ -107,7 +112,7 @@ namespace GUI {
         ui->pkcs11_combo_box->addItem("/usr/lib/libeTPkcs11.so");
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(_WIN32)
         ui->enter_button->setEnabled(false);
 #endif
 
@@ -169,7 +174,12 @@ namespace GUI {
 
         auto font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
+#if _WIN32
+        font.setPixelSize(18);
+        font.setFamilies({ "Consolas" });
+#else
         font.setPixelSize(16);
+#endif
 
         ui->pkcs11_combo_box->setFont(font);
         ui->key_combo_box->setFont(font);

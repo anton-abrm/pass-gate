@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
 project(pass-gate VERSION 2.0.0 LANGUAGES CXX)
 
@@ -14,13 +14,16 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 if (APPLE)
     list(APPEND CMAKE_PREFIX_PATH /opt/homebrew/opt/qt6)
     list(APPEND CMAKE_PREFIX_PATH /opt/homebrew/opt/openssl)
-endif()
+elseif (WIN32)
+    list(APPEND CMAKE_PREFIX_PATH "C:\\Qt\\6.9.0\\msvc2022_64")
+    list(APPEND CMAKE_PREFIX_PATH "C:\\Program Files\\OpenSSL-Win64")
+endif ()
 
 find_package(Qt6 COMPONENTS Core REQUIRED)
 find_package(Qt6 COMPONENTS Widgets REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-add_executable(pass-gate
+set(PROJECT_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/GitEnv.cpp
         Crypto/BIP39.cpp
         Base/Encoding.cpp
@@ -70,19 +73,36 @@ add_executable(pass-gate
         Base/ByteSplitter.h
 )
 
-target_link_libraries(pass-gate
-        Qt6::Core
-        Qt6::Widgets
-        OpenSSL::SSL
-        )
+if (WIN32)
 
-if(LINUX)
+    add_executable(pass-gate WIN32
+            ${PROJECT_SOURCES}
+    )
+    set_property(TARGET pass-gate PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
+elseif (LINUX)
+
+    add_executable(pass-gate
+            ${PROJECT_SOURCES}
+    )
+
     target_link_libraries(pass-gate xdo)
-endif()
 
-if(APPLE)
+    include(GNUInstallDirs)
+    install(TARGETS pass-gate
+            DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 
-    set_target_properties(pass-gate PROPERTIES MACOSX_BUNDLE TRUE)
+elseif (APPLE)
+
+    add_executable(pass-gate
+            ${PROJECT_SOURCES}
+    )
+
+    set_target_properties(pass-gate PROPERTIES
+            MACOSX_BUNDLE TRUE
+            OUTPUT_NAME "Pass Gate")
 
     # NOTE: Don't include the path in MACOSX_BUNDLE_ICON_FILE -- this is
     # the property added to Info.plist
@@ -96,23 +116,21 @@ if(APPLE)
 
     target_sources(pass-gate PRIVATE ${APP_ICON_MACOSX})
 
-    set_target_properties(pass-gate
-            PROPERTIES OUTPUT_NAME "Pass Gate")
+endif ()
 
-endif()
+target_link_libraries(pass-gate
+        Qt6::Core
+        Qt6::Widgets
+        OpenSSL::SSL
+)
 
 configure_file(Version.h.in Version.h @ONLY)
-
-if(LINUX)
-    include(GNUInstallDirs)
-    install(TARGETS pass-gate
-            DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
-endif()
 
 # Tests
 set(INSTALL_GTEST OFF)
 set(BUILD_GMOCK OFF)
+
+set(gtest_force_shared_crt ON)
 
 add_subdirectory(ThirdParty/GoogleTest
         EXCLUDE_FROM_ALL)
@@ -145,11 +163,16 @@ add_executable(pass-gate-tests
         PGS/V1/EncryptionInfo.cpp
 )
 
+if (WIN32)
+    set_property(TARGET pass-gate-tests PROPERTY
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif ()
+
 target_link_libraries(pass-gate-tests
         gtest
         gtest_main
         OpenSSL::SSL
-        )
+)
 
 ADD_CUSTOM_COMMAND(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/GitEnv.cpp

@@ -2,7 +2,12 @@
 
 #include <algorithm>
 #include <memory>
-#include <dlfcn.h>
+
+#if _WIN32
+    #include <Windows.h>
+#else
+    #include <dlfcn.h>
+#endif
 
 #include "Base/ZString.h"
 
@@ -55,8 +60,11 @@ namespace PKI {
 
         try {
 
+#if _WIN32
+            m_pkcs11_handle = LoadLibraryA(std::string(provider).c_str());
+#else
             m_pkcs11_handle = dlopen(std::string(provider).c_str(), RTLD_LAZY);
-
+#endif
             if (!m_pkcs11_handle) {
                 throw create_error("Unable to obtain PKCS11 library handle.");
             }
@@ -64,7 +72,11 @@ namespace PKI {
             // https://pubs.opengroup.org/onlinepubs/009695399/functions/dlsym.html
             CK_C_GetFunctionList get_fn_list_ptr {nullptr};
 
+#if _WIN32
+            if (*(void **)(&get_fn_list_ptr) = GetProcAddress(static_cast<HMODULE>(m_pkcs11_handle), "C_GetFunctionList"); !get_fn_list_ptr) {
+#else
             if (*(void **)(&get_fn_list_ptr) = dlsym(m_pkcs11_handle, "C_GetFunctionList"); !get_fn_list_ptr) {
+#endif
                 throw create_error("Unable to find C_GetFunctionList.");
             }
 
@@ -117,7 +129,12 @@ namespace PKI {
         }
 
         if (m_pkcs11_handle) {
+
+#if _WIN32
+            FreeLibrary(static_cast<HMODULE>(m_pkcs11_handle));
+#else
             dlclose(m_pkcs11_handle);
+#endif
             m_pkcs11_handle = nullptr;
         }
     }
