@@ -83,6 +83,8 @@ if (WIN32)
     set_property(TARGET pass-gate PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
+    target_link_libraries(pass-gate Dwmapi)
+
 elseif (LINUX)
 
     add_executable(pass-gate
