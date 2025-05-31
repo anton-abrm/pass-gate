@@ -127,6 +127,9 @@ namespace GUI {
 #endif
 
 #if defined(__APPLE__) || defined(_WIN32)
+        QPalette palette = ui->enter_button->palette();
+        palette.setColor(QPalette::ButtonText, Qt::darkGray);
+        ui->enter_button->setPalette(palette);
         ui->enter_button->setEnabled(false);
 #endif
 
