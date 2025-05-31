@@ -71,6 +71,7 @@ namespace GUI {
         void load_secret_file(const QString &file_path);
         void set_secret_file_content(const QString &content);
         bool prompt_warning_yes_no(const QString &text);
+        void prompt_warning(const QString &text);
 
         void reset_format_combo_box_for_password();
         void reset_format_combo_box_for_keyfile();

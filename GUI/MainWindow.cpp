@@ -210,7 +210,7 @@ namespace GUI {
                 }
             }
             catch (const std::runtime_error& ex) {
-                QMessageBox::warning(this, "Error", ex.what());
+                prompt_warning(ex.what());
             }
         }
 
@@ -233,7 +233,7 @@ namespace GUI {
         }
         catch (const std::exception &ex) {
             reset_key_combo_box(true);
-            QMessageBox::warning(this, "Error", ex.what());
+            prompt_warning(ex.what());
             return;
         }
 
@@ -277,7 +277,7 @@ namespace GUI {
             });
         }
         catch (const std::exception &ex) {
-            QMessageBox::warning(this, "Error", ex.what());
+            prompt_warning(ex.what());
         }
     }
 
@@ -678,7 +678,7 @@ namespace GUI {
         }
         catch (const std::runtime_error& ex) {
             reset_key_combo_box(true);
-            QMessageBox::warning(this, "Error", ex.what());
+            prompt_warning(ex.what());
         }
 
         this->ui->apply_button->setText("Done");
@@ -1118,7 +1118,7 @@ namespace GUI {
             load_secret_file(file_path);
         }
         catch (const std::runtime_error& ex) {
-            QMessageBox::warning(this, "Error", ex.what());
+            prompt_warning(ex.what());
         }
     }
 
@@ -1148,7 +1148,7 @@ namespace GUI {
             load_secret_file(file_path);
         }
         catch (const std::runtime_error& ex) {
-            QMessageBox::warning(this, "Error", ex.what());
+            prompt_warning(ex.what());
             return true;
         }
 
@@ -1330,6 +1330,17 @@ namespace GUI {
         mb.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
 
         return mb.exec() == QMessageBox::Yes;
+    }
+
+    void MainWindow::prompt_warning(const QString &text) {
+
+        QMessageBox mb(this);
+
+        mb.setIcon(QMessageBox::Warning);
+        mb.setWindowTitle("Warning");
+        mb.setText(text);
+
+        mb.exec();
     }
 
     MainWindow::Command MainWindow::current_command() const
