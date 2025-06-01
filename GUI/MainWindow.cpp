@@ -107,13 +107,6 @@ namespace GUI {
 
         ui->setupUi(this);
 
-#if __linux__
-        ui->pkcs11_combo_box->addItem("/usr/lib/opensc-pkcs11.so");
-        ui->pkcs11_combo_box->addItem("/usr/lib/libeTPkcs11.so");
-#elif _WIN32
-        ui->pkcs11_combo_box->addItem("C:/Program Files/OpenSC Project/OpenSC/pkcs11/opensc-pkcs11.dll");
-#endif
-
 #if defined(__APPLE__) || defined(_WIN32)
         QPalette palette = ui->enter_button->palette();
         palette.setColor(QPalette::ButtonText, Qt::darkGray);
@@ -124,6 +117,7 @@ namespace GUI {
         decorate_dialog(this);
 
         update_window_title();
+        fill_default_pkcs11_providers();
 
         connect(ui->go_button, &QPushButton::clicked, this, &MainWindow::go_button_clicked);
         connect(ui->apply_button, &QPushButton::clicked, this, &MainWindow::apply_button_clicked);

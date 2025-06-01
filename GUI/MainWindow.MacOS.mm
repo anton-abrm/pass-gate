@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include <ui_MainWindow.h>
 
 #include <QWidget>
 
@@ -13,5 +14,9 @@ namespace GUI {
         NSWindow* window = [view window];
         [window setTitlebarAppearsTransparent:true];
         [window setBackgroundColor: [NSColor colorWithRed:53./255. green:53./255. blue:53./255. alpha:1.]];
+    }
+
+    void MainWindow::fill_default_pkcs11_providers() {
+        ui->pkcs11_combo_box->addItem("/Library/OpenSC/lib/opensc-pkcs11.so");
     }
 }
