@@ -14,4 +14,8 @@ namespace GUI {
     void MainWindow::fill_default_pkcs11_providers() {
         ui->pkcs11_combo_box->addItem("C:/Program Files/OpenSC Project/OpenSC/pkcs11/opensc-pkcs11.dll");
     }
+
+    QString MainWindow::pkcs11_provider_dialog_filter() {
+        return "PKCS (*.dll *.pem *.pk8 *.p12 *.pfx)";
+    }
 }

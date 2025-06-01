@@ -54,12 +54,6 @@ static const QString c_map_key_name = "key-name";
 
 static const QString c_save_load_dialog_filter = "Pass Gate Secret (*.pgs)";
 
-#if _WIN32
-static const QString c_select_provider_dialog_filter = "PKCS (*.dll *.pem *.pk8 *.p12 *.pfx)";
-#else
-static const QString c_select_provider_dialog_filter = "PKCS (*.so *.pem *.pk8 *.p12 *.pfx)";
-#endif
-
 static const std::size_t c_output_kcv_size = 4;
 
 static std::shared_ptr<Core::PKIProvider> g_provider = PKI::PKCS11Provider::instance();
@@ -1182,7 +1176,7 @@ namespace GUI {
     void MainWindow::select_provider_button_clicked()
     {
         const auto file_name = QFileDialog::getOpenFileName(
-                this, "Open Secret", QString(), c_select_provider_dialog_filter);
+            this, "Open PKCS11 Library", QString(), pkcs11_provider_dialog_filter());
 
         if (file_name.isEmpty())
             return;

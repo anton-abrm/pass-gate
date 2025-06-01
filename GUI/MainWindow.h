@@ -87,6 +87,7 @@ namespace GUI {
         void fill_default_pkcs11_providers();
 
         static void decorate_dialog(QWidget *widget);
+        static QString pkcs11_provider_dialog_filter();
 
     private slots:
 

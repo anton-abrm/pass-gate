@@ -19,4 +19,8 @@ namespace GUI {
     void MainWindow::fill_default_pkcs11_providers() {
         ui->pkcs11_combo_box->addItem("/Library/OpenSC/lib/opensc-pkcs11.so");
     }
+
+    QString MainWindow::pkcs11_provider_dialog_filter() {
+        return "PKCS (*.so *.dylib *.pem *.pk8 *.p12 *.pfx)";
+    }
 }
