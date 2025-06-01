@@ -79,6 +79,7 @@ if (WIN32)
     add_executable(pass-gate WIN32
             ${PROJECT_SOURCES}
             ${CMAKE_CURRENT_SOURCE_DIR}/KeyChain.rc
+            GUI/MainWindow.Windows.cpp
     )
     set_property(TARGET pass-gate PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
@@ -89,6 +90,7 @@ elseif (LINUX)
 
     add_executable(pass-gate
             ${PROJECT_SOURCES}
+            GUI/MainWindow.Linux.cpp
     )
 
     target_link_libraries(pass-gate xdo)
@@ -102,6 +104,7 @@ elseif (APPLE)
 
     add_executable(pass-gate
             ${PROJECT_SOURCES}
+            GUI/MainWindow.MacOS.mm
     )
 
     set_target_properties(pass-gate PROPERTIES

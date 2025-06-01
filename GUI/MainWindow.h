@@ -84,6 +84,8 @@ namespace GUI {
         void reset_format_combo_box_for_bip39();
         void reset_format_combo_box_for_random();
 
+        static void decorate_dialog(QWidget *widget);
+
     private slots:
 
         void pin_key_button_clicked();

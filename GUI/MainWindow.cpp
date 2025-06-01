@@ -41,11 +41,6 @@
 #include "PKI/PKCS12Provider.h"
 #include "Password/Password.h"
 
-#ifdef _WIN32
-#define NOMINMAX
-#include <dwmapi.h>
-#endif
-
 #include "Version.h"
 
 static const QString c_config_name = "pass-gate";
@@ -105,13 +100,6 @@ static std::optional<std::tuple<uint8_t, uint8_t>> parse_m_n(const QString &valu
     );
 }
 
-static void apply_styles(const QWidget &widget) {
-#if _WIN32
-    BOOL value = TRUE;
-    DwmSetWindowAttribute(reinterpret_cast<HWND>(widget.winId()), DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
-#endif
-}
-
 namespace GUI {
 
     MainWindow::MainWindow(QWidget *parent)
@@ -133,7 +121,7 @@ namespace GUI {
         ui->enter_button->setEnabled(false);
 #endif
 
-        apply_styles(*this);
+        decorate_dialog(this);
 
         update_window_title();
 
@@ -797,7 +785,7 @@ namespace GUI {
 
                 PinDialog dlg(this);
 
-                apply_styles(dlg);
+                decorate_dialog(&dlg);
 
                 dlg.setModal(true);
 
@@ -1343,7 +1331,7 @@ namespace GUI {
     {
         QMessageBox mb(this);
 
-        apply_styles(mb);
+        decorate_dialog(&mb);
 
         mb.setIcon(QMessageBox::Warning);
         mb.setWindowTitle("Warning");
@@ -1357,7 +1345,7 @@ namespace GUI {
 
         QMessageBox mb(this);
 
-        apply_styles(mb);
+        decorate_dialog(&mb);
 
         mb.setIcon(QMessageBox::Warning);
         mb.setWindowTitle("Warning");
