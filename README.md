@@ -1,6 +1,6 @@
 # Pass Gate
 
-A GUI application for Mac and Linux which aims to provide a set of operations for handling user secrets.
+A GUI application for MacOS, Linux and Windows which aims to provide a set of operations for handling user secrets.
 
 ## Motivation
 
