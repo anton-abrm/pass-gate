@@ -102,9 +102,6 @@ namespace GUI {
         ui->setupUi(this);
 
 #if defined(__APPLE__) || defined(_WIN32)
-        QPalette palette = ui->enter_button->palette();
-        palette.setColor(QPalette::ButtonText, Qt::darkGray);
-        ui->enter_button->setPalette(palette);
         ui->enter_button->setEnabled(false);
 #endif
 
@@ -1289,22 +1286,8 @@ namespace GUI {
 
     void MainWindow::update_save_button_status()
     {
-        if (ui->data_plain_edit->toPlainText().trimmed().isEmpty())
-        {
-            QPalette palette = ui->save_data_button->palette();
-            palette.setColor(QPalette::ButtonText, Qt::darkGray);
-            ui->save_data_button->setPalette(palette);
-
-            ui->save_data_button->setEnabled(false);
-        }
-        else
-        {
-            ui->save_data_button->setEnabled(true);
-
-            QPalette palette = ui->save_data_button->palette();
-            palette.setColor(QPalette::ButtonText, QApplication::palette().color(QPalette::ButtonText));
-            ui->save_data_button->setPalette(palette);
-        }
+        ui->save_data_button->setDisabled(
+            ui->data_plain_edit->toPlainText().trimmed().isEmpty());
     }
 
     void MainWindow::data_plain_edit_text_changed()
