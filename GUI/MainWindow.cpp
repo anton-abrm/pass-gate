@@ -529,10 +529,7 @@ namespace GUI {
 
     void MainWindow::save_data_button_clicked() {
 
-        auto file_name = g_secret_path;
-
-        if (file_name.isEmpty())
-            file_name = QFileDialog::getSaveFileName(this, "Save Secret", QString(), c_save_load_dialog_filter);
+        const auto file_name = QFileDialog::getSaveFileName(this, "Save Secret", g_secret_path, c_save_load_dialog_filter);
 
         if (file_name.isEmpty())
             return;
