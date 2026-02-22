@@ -109,6 +109,7 @@ elseif (APPLE)
 
     set_target_properties(pass-gate PROPERTIES
             MACOSX_BUNDLE TRUE
+            MACOSX_BUNDLE_GUI_IDENTIFIER "pass-gate"
             OUTPUT_NAME "Pass Gate")
 
     # NOTE: Don't include the path in MACOSX_BUNDLE_ICON_FILE -- this is
