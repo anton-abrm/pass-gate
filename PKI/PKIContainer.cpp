@@ -6,16 +6,19 @@
 #include <openssl/rsa.h>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
+#include <openssl/core_names.h>
 
 #include "Base/Encoding.h"
 
 static std::vector<uint8_t> get_rsa_modulus(EVP_PKEY &pkey) {
 
-    std::unique_ptr<RSA, decltype(&RSA_free)> rsa(
-            EVP_PKEY_get1_RSA(&pkey),
-            &RSA_free);
+    BIGNUM *n = nullptr;
 
-    const BIGNUM *n = RSA_get0_n(rsa.get());
+    if (!EVP_PKEY_get_bn_param(&pkey, OSSL_PKEY_PARAM_RSA_N, &n)) {
+        throw std::runtime_error("Unable to retrieve RSA modulus.");
+    }
+
+    std::unique_ptr<BIGNUM, decltype(&BN_free)> n_guard(n, &BN_free);
 
     std::vector<uint8_t> result(BN_num_bytes(n));
 
