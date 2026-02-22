@@ -10,7 +10,7 @@
 
 #include "Base/Encoding.h"
 
-static std::vector<uint8_t> get_rsa_modulus(EVP_PKEY &pkey) {
+static std::vector<uint8_t> get_rsa_modulus(const EVP_PKEY &pkey) {
 
     BIGNUM *n = nullptr;
 
@@ -27,18 +27,17 @@ static std::vector<uint8_t> get_rsa_modulus(EVP_PKEY &pkey) {
     return result;
 }
 
-static std::string_view x509_get_common_name(X509 &x509) {
+static std::string_view x509_get_common_name(const X509 &x509) {
 
-    X509_NAME *subject = X509_get_subject_name(&x509);
+    const X509_NAME *subject = X509_get_subject_name(&x509);
 
     for (int i = 0; i < X509_NAME_entry_count(subject); i++) {
 
-        X509_NAME_ENTRY *nameEntry = X509_NAME_get_entry(subject, i);
-        ASN1_OBJECT *obj = X509_NAME_ENTRY_get_object(nameEntry);
+        const X509_NAME_ENTRY *ne = X509_NAME_get_entry(subject, i);
 
-        if (OBJ_obj2nid(obj) == NID_commonName) {
+        if (const ASN1_OBJECT *obj = X509_NAME_ENTRY_get_object(ne); OBJ_obj2nid(obj) == NID_commonName) {
 
-            ASN1_STRING *d = X509_NAME_ENTRY_get_data(nameEntry);
+            const ASN1_STRING *d = X509_NAME_ENTRY_get_data(ne);
 
             return {
                     reinterpret_cast<const char *>(ASN1_STRING_get0_data(d)),
@@ -101,9 +100,7 @@ Base::ZBytes PKI::PKIContainer::sign(std::span<const uint8_t> id, std::span<cons
     if (!m_private_key)
         throw std::runtime_error("Key is not initialized.");
 
-    auto modulus = get_rsa_modulus(*m_private_key);
-
-    if (!std::equal(id.begin(), id.end(), modulus.begin()))
+    if (auto modulus = get_rsa_modulus(*m_private_key); !std::equal(id.begin(), id.end(), modulus.begin()))
         throw std::runtime_error("Key with specified token not found.");
 
     std::unique_ptr<EVP_PKEY_CTX , decltype(&EVP_PKEY_CTX_free)> ctx(
