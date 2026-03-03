@@ -26,13 +26,13 @@ namespace Keyboard {
         xdo_focus_window(xdo.get(), active_window);
         xdo_click_window(xdo.get(), active_window, 1);
 
-        usleep(100000);
+        usleep(25000);
 
         xdo_enter_text_window(
                 xdo.get(),
                 active_window,
                 Base::ZString(text).c_str(),
-                100000);
+                25000);
 #endif
 
     }
