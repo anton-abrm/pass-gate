@@ -55,12 +55,14 @@ namespace Crypto {
     Base::ZBytes encrypt_aes_256_gcm(
             std::span<const uint8_t> key,
             std::span<const uint8_t> iv,
+            std::span<const uint8_t> aad,
             std::span<const uint8_t> plain,
             Base::ZBytes &tag);
 
     Base::ZBytes decrypt_aes_256_gcm(
             std::span<const uint8_t> key,
             std::span<const uint8_t> iv,
+            std::span<const uint8_t> aad,
             std::span<const uint8_t> cipher,
             std::span<const uint8_t> tag);
 }

@@ -4,6 +4,7 @@
 #include <span>
 #include <cstdint>
 
+#include "AadEncryptionService.h"
 #include "PKIProvider.h"
 #include "Core/EntropySource.h"
 #include "Core/EncryptionService.h"
@@ -12,8 +13,10 @@
 
 namespace Core {
 
-class EncryptionServiceV2 final : public virtual Core::EncryptionService
-    {
+class EncryptionServiceV2 final :
+    public virtual Core::EncryptionService,
+    public virtual Core::AadEncryptionService
+{
     public:
 
         explicit EncryptionServiceV2(
@@ -23,6 +26,9 @@ class EncryptionServiceV2 final : public virtual Core::EncryptionService
 
         [[nodiscard]] Base::ZBytes encrypt(std::string_view plain) const override;
         [[nodiscard]] Base::ZString decrypt(std::span<const uint8_t> body) const override;
+
+        [[nodiscard]] Base::ZBytes encrypt(std::string_view plain, std::string_view aad) const override;
+        [[nodiscard]] Base::ZString decrypt(std::span<const uint8_t> body, std::string_view aad) const override;
 
     private:
         const std::shared_ptr<Core::EntropySource> m_entropy_source;

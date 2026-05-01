@@ -30,6 +30,7 @@ set(PROJECT_SOURCES
         Core/BIP39EntropySource.cpp
         Core/BIP39EntropySourceV2.cpp
         Core/EncryptionService.cpp
+        Core/AadEncryptionService.cpp
         Core/EncryptionServiceV1.cpp
         Core/EncryptionServiceV2.cpp
         Core/EntropySource.cpp

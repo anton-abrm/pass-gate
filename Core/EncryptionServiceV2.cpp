@@ -12,8 +12,11 @@ static constexpr const std::size_t c_aes_gcm_key_size = 32;
 static constexpr const std::size_t c_aes_gcm_iv_size = 12;
 static constexpr const std::size_t c_aes_gcm_tag_size = 16;
 
-Base::ZBytes Core::EncryptionServiceV2::encrypt(
-        std::string_view plain) const
+Base::ZBytes Core::EncryptionServiceV2::encrypt(std::string_view plain) const {
+    return encrypt(plain, {});
+}
+
+Base::ZBytes Core::EncryptionServiceV2::encrypt(std::string_view plain, std::string_view aad) const
 {
     Base::ZBytes nonce(c_sign_nonce_size);
 
@@ -39,7 +42,9 @@ Base::ZBytes Core::EncryptionServiceV2::encrypt(
 
     Base::ZBytes tag(c_aes_gcm_tag_size);
 
-    const auto cipher = Crypto::encrypt_aes_256_gcm(key, iv, plain_bytes, tag);
+    const auto cipher = Crypto::encrypt_aes_256_gcm(key, iv,
+        { reinterpret_cast<const uint8_t*>(aad.data()), aad.size() },
+        plain_bytes, tag);
 
     Base::ZBytes body;
 
@@ -66,6 +71,10 @@ Core::EncryptionServiceV2::EncryptionServiceV2(
 }
 
 Base::ZString Core::EncryptionServiceV2::decrypt(std::span<const uint8_t> body) const {
+    return decrypt(body, {});
+}
+
+Base::ZString Core::EncryptionServiceV2::decrypt(std::span<const uint8_t> body, std::string_view aad) const {
 
     Core::ByteSplitter body_splitter(body);
 
@@ -82,7 +91,9 @@ Base::ZString Core::EncryptionServiceV2::decrypt(std::span<const uint8_t> body) 
     const auto key = seed_splitter.next(c_aes_gcm_key_size);
     const auto iv = seed_splitter.next(c_aes_gcm_iv_size);
 
-    auto plain = Crypto::decrypt_aes_256_gcm(key, iv, cipher, tag);
+    auto plain = Crypto::decrypt_aes_256_gcm(key, iv,
+        { reinterpret_cast<const uint8_t*>(aad.data()), aad.size() },
+        cipher, tag);
 
     const auto padding_start = std::find_if(
             plain.rbegin(), plain.rend(),

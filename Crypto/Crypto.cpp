@@ -238,6 +238,7 @@ Base::ZBytes Crypto::compute_hkdf_hmac_sha512_expand_only(
 Base::ZBytes
 Crypto::encrypt_aes_256_gcm(std::span<const uint8_t> key,
                             std::span<const uint8_t> iv,
+                            std::span<const uint8_t> aad,
                             std::span<const uint8_t> plain,
                             Base::ZBytes &tag) {
 
@@ -260,6 +261,9 @@ Crypto::encrypt_aes_256_gcm(std::span<const uint8_t> key,
 
     std::size_t output_size{0};
 
+    if(1 != EVP_EncryptUpdate(ctx.get(), nullptr, &len, aad.data(), static_cast<int>(aad.size())))
+        throw std::runtime_error("Unable to add AAD for AES 256 GCM.");
+
     if(1 != EVP_EncryptUpdate(ctx.get(), cipher.data() + output_size, &len, plain.data(), static_cast<int>(plain.size())))
         throw std::runtime_error("Unable to encrypt message for AES 256 GCM.");
 
@@ -280,10 +284,11 @@ Crypto::encrypt_aes_256_gcm(std::span<const uint8_t> key,
 
 Base::ZBytes
 Crypto::decrypt_aes_256_gcm(
-        std::span<const uint8_t> key,
-        std::span<const uint8_t> iv,
-        std::span<const uint8_t> cipher,
-        std::span<const uint8_t> tag) {
+    std::span<const uint8_t> key,
+    std::span<const uint8_t> iv,
+    std::span<const uint8_t> aad,
+    std::span<const uint8_t> cipher,
+    std::span<const uint8_t> tag) {
 
     if (key.size() != c_aes_256_key_size)
         throw std::runtime_error("Invalid AES Key size.");
@@ -306,6 +311,9 @@ Crypto::decrypt_aes_256_gcm(
     int len{0};
 
     std::size_t output_size{0};
+
+    if(1 != EVP_DecryptUpdate(ctx.get(), nullptr, &len, aad.data(), static_cast<int>(aad.size())))
+        throw std::runtime_error("Unable to add AAD for AES 256 GCM.");
 
     if(1 != EVP_DecryptUpdate(ctx.get(), plain.data(), &len, cipher.data(), static_cast<int>(cipher.size())))
         throw std::runtime_error("Unable to decrypt message using AES 256 GCM.");
