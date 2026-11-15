@@ -216,7 +216,7 @@ namespace GUI {
     void MainWindow::go_button_clicked() {
 
         try {
-            if (!g_provider->is_initialized()) {
+            if (!g_provider->is_initialized() && (current_entropy_type() != PGS::EntropySourceType::BIP39 || current_command() == Command::Encrypt)) {
                 reset_provider();
                 update_certificates();
             }
