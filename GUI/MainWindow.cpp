@@ -1357,7 +1357,7 @@ namespace GUI {
         ui->password_format_combo_box->clear();
 
         ui->password_format_combo_box->addItem("128 bit", 16);
-        ui->password_format_combo_box->addItem("92 bit", 12);
+        ui->password_format_combo_box->addItem("96 bit", 12);
         ui->password_format_combo_box->addItem("64 bit", 8);
         ui->password_format_combo_box->addItem("32 bit", 4);
 
