@@ -221,7 +221,7 @@ namespace Password {
 
         const auto alphabets = parse_params(format, password_length, password_type);
 
-        if (!alphabets)
+        if (!alphabets || alphabets.value().empty())
             throw std::runtime_error("Invalid password format.");
 
         Base::ZString password;
