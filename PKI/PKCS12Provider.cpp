@@ -7,7 +7,7 @@
 void PKI::PKCS12Provider::initialize(std::string_view provider)
 {
     std::unique_ptr<FILE, decltype([](FILE* file){ fclose(file); })> file(
-        fopen(std::string(provider).c_str(), "r"));
+        fopen(std::string(provider).c_str(), "rb"));
 
     if (!file)
         throw std::runtime_error("Unable to open file");
