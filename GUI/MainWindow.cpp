@@ -1562,6 +1562,9 @@ namespace GUI {
 
             auto parts = line.split('.', Qt::SplitBehaviorFlags::SkipEmptyParts);
 
+            if (parts.size() != 2)
+                 throw std::runtime_error("Invalid share format.");
+
             const auto id = static_cast<uint8_t>(parts[0].trimmed().toInt());
 
             const auto body = SecretFormatter::convert_password_to_original_from(parts[1].trimmed()).toStdString();
