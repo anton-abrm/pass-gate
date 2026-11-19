@@ -52,7 +52,7 @@ Crypto::compute_pbkdf2_hmac_sha512(std::span<const uint8_t> password,
 
     Base::ZBytes result(key_length);
 
-    if (EVP_KDF_derive(kdf_ctx.get(), result.data(), key_length, params) < 0)
+    if (EVP_KDF_derive(kdf_ctx.get(), result.data(), key_length, params) != 1)
         throw std::runtime_error("Unable to compute KDF");
 
     return result;
@@ -84,7 +84,7 @@ Crypto::compute_pbkdf2_hmac_sha256(std::span<const uint8_t> password,
 
     Base::ZBytes result(key_length);
 
-    if (EVP_KDF_derive(kdf_ctx.get(), result.data(), key_length, params) < 0)
+    if (EVP_KDF_derive(kdf_ctx.get(), result.data(), key_length, params) != 1)
         throw std::runtime_error("Unable to compute KDF");
 
     return result;
