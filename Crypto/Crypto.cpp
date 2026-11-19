@@ -12,7 +12,8 @@ Base::ZBytes Crypto::compute_sha_256(std::span<const uint8_t> bytes) {
 
     Base::ZBytes result(SHA256_DIGEST_LENGTH);
 
-    SHA256(bytes.data(), bytes.size(), result.data());
+    if (!SHA256(bytes.data(), bytes.size(), result.data()))
+        throw std::runtime_error("Unable to compute SHA 256.");
 
     return result;
 }
@@ -21,7 +22,8 @@ Base::ZBytes Crypto::compute_sha_512(std::span<const uint8_t> bytes)
 {
     Base::ZBytes result(SHA512_DIGEST_LENGTH);
 
-    SHA512(bytes.data(), bytes.size(), result.data());
+    if (!SHA512(bytes.data(), bytes.size(), result.data()))
+        throw std::runtime_error("Unable to compute SHA 512.");
 
     return result;
 }

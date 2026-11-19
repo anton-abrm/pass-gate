@@ -123,7 +123,8 @@ Base::ZBytes PKI::PKIContainer::sign(std::span<const uint8_t> id, std::span<cons
 
     unsigned char md[SHA512_DIGEST_LENGTH]{0};
 
-    SHA512(data.data(), data.size(), md);
+    if (!SHA512(data.data(), data.size(), md))
+        throw std::runtime_error("Unable to compute SHA 512.");
 
     if (EVP_PKEY_sign(ctx.get(), nullptr, &sign_length, md, sizeof(md)) <= 0)
         throw std::runtime_error("Unable to determine sign length.");
