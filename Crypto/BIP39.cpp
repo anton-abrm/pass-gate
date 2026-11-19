@@ -2180,7 +2180,7 @@ std::optional<Base::ZBytes> BIP39::mnemonic_to_seed(std::string_view mnemonic, s
     salt.append(passphrase);
 
     return Crypto::compute_pbkdf2_hmac_sha512(
-            { reinterpret_cast<const uint8_t *>(mnemonic.data()), mnemonic.size() },
+            { reinterpret_cast<const uint8_t *>(computed_mnemonic.value().data()), computed_mnemonic.value().size() },
             { reinterpret_cast<const uint8_t *>(salt.data()), salt.size() },
             2048,
             seed_size);
