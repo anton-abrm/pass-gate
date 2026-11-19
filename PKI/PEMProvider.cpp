@@ -4,6 +4,8 @@
 #include <openssl/pem.h>
 #include <openssl/evp.h>
 
+#include <exception>
+
 void PKI::PEMProvider::initialize(std::string_view provider)
 {
     std::unique_ptr<FILE, decltype([](FILE* file){ fclose(file); })> file(
@@ -12,12 +14,21 @@ void PKI::PEMProvider::initialize(std::string_view provider)
     if (!file)
         throw std::runtime_error("Unable to open file");
 
-    EVP_PKEY * private_key = PEM_read_PrivateKey(file.get(), nullptr, password_callback, nullptr);
+    std::exception_ptr error;
+
+    std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> private_key(
+        PEM_read_PrivateKey(file.get(), nullptr, password_callback, &error),
+        &EVP_PKEY_free);
+
+    // Exceptions must not cross OpenSSL's C frames, so the callback stores
+    // them and they are rethrown here.
+    if (error)
+        std::rethrow_exception(error);
 
     if (!private_key)
         throw std::runtime_error("Unable to read private key");
 
-    m_private_key = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>(private_key, &EVP_PKEY_free);
+    m_private_key = std::move(private_key);
 
     m_initialized = true;
 }
@@ -29,20 +40,28 @@ std::shared_ptr<PKI::PEMProvider> PKI::PEMProvider::instance() {
     return instance;
 }
 
-int PKI::PEMProvider::password_callback(char *buffer, int size, int rwflag, void *u)
+int PKI::PEMProvider::password_callback(char *buffer, int size, int /*rwflag*/, void *u)
 {
-    std::string pass;
+    auto &error = *static_cast<std::exception_ptr *>(u);
 
-    if (!instance()->m_pin_callback ||
-        !instance()->m_pin_callback(pass))
+    try {
+        std::string pass;
+
+        if (!instance()->m_pin_callback ||
+            !instance()->m_pin_callback(pass))
+            return -1;
+
+        if (size < 0 || pass.size() > static_cast<std::size_t>(size))
+            throw std::runtime_error("Password too long");
+
+        pass.copy(buffer, pass.size());
+
+        return static_cast<int>(pass.size());
+    }
+    catch (...) {
+        error = std::current_exception();
         return -1;
-
-    if (size < pass.size())
-        throw std::logic_error("Password too long");
-
-    pass.copy(buffer, pass.size());
-
-    return static_cast<int>(pass.size());
+    }
 }
 
 PKI::PEMProvider::PEMProvider() = default;
