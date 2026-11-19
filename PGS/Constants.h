@@ -7,7 +7,6 @@ namespace PGS {
     };
 
     enum class BIP39Version {
-        BIP39V1 = 1,
         BIP39V2 = 2,
     };
 

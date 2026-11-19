@@ -16,7 +16,6 @@
 #include <QMimeData>
 
 #include "Base/Encoding.h"
-#include "Core/BIP39EntropySource.h"
 #include "Core/BIP39EntropySourceV2.h"
 #include "Core/EncryptionServiceV1.h"
 #include "Core/EncryptionServiceV2.h"
@@ -362,10 +361,6 @@ namespace GUI {
 
                 switch (bip39_version)
                 {
-                    case PGS::BIP39Version::BIP39V1:
-                        entropy->source = std::make_unique<Core::BIP39EntropySource>(mnemonic);
-                        break;
-
                     case PGS::BIP39Version::BIP39V2:
                         entropy->source = std::make_unique<Core::BIP39EntropySourceV2>(mnemonic, info);
                         break;
@@ -1435,7 +1430,6 @@ namespace GUI {
     {
         ui->entropy_format_combo_box->clear();
         ui->entropy_format_combo_box->addItem("v2 (Latest)", static_cast<int>(PGS::BIP39Version::BIP39V2));
-        ui->entropy_format_combo_box->addItem("v1", static_cast<int>(PGS::BIP39Version::BIP39V1));
     }
 
     void MainWindow::reset_format_combo_box_for_random()

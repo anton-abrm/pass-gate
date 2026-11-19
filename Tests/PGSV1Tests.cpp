@@ -16,7 +16,6 @@ static void parse_and_render_test(const std::string &text) {
 
 TEST(Package, parse_and_render) {
     parse_and_render_test("pgs-v1.sign-v2-123456.enc-v2.AQID");
-    parse_and_render_test("pgs-v1.bip39-v1-123456.enc-v2.AQID");
     parse_and_render_test("pgs-v1.bip39-v2-123456.enc-v2.AQID");
     parse_and_render_test("pgs-v1.rand.enc-v1.AQID");
     parse_and_render_test("pgs-v1.rand.enc-v2.AQID");

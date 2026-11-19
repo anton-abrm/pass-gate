@@ -42,9 +42,7 @@ std::optional<std::unique_ptr<PGS::V1::BIP39EntropySourceInfo>> PGS::V1::BIP39En
 
     std::unique_ptr<BIP39EntropySourceInfo> result;
 
-    if (parts[1] == "v1")
-        result = std::make_unique<BIP39EntropySourceInfo>(BIP39Version::BIP39V1);
-    else if (parts[1] == "v2")
+    if (parts[1] == "v2")
         result = std::make_unique<BIP39EntropySourceInfo>(BIP39Version::BIP39V2);
 
     if (!result)

@@ -27,7 +27,6 @@ set(PROJECT_SOURCES
         ${CMAKE_CURRENT_BINARY_DIR}/GitEnv.cpp
         Crypto/BIP39.cpp
         Base/Encoding.cpp
-        Core/BIP39EntropySource.cpp
         Core/BIP39EntropySourceV2.cpp
         Core/EncryptionService.cpp
         Core/AadEncryptionService.cpp
