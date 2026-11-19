@@ -11,7 +11,6 @@ namespace PGS {
     };
 
     enum class EncryptionVersion {
-        EncryptionV1 = 1,
         EncryptionV2 = 2,
     };
 

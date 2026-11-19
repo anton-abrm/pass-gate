@@ -17,7 +17,6 @@
 
 #include "Base/Encoding.h"
 #include "Core/BIP39EntropySourceV2.h"
-#include "Core/EncryptionServiceV1.h"
 #include "Core/EncryptionServiceV2.h"
 #include "Core/MemoryRandomNumberGenerator.h"
 #include "Core/RandomEntropySource.h"
@@ -564,9 +563,6 @@ namespace GUI {
             case PGS::EncryptionVersion::EncryptionV2:
                 return std::make_unique<Core::EncryptionServiceV2>(std::move(source), g_rnd, salt);
 
-            case PGS::EncryptionVersion::EncryptionV1:
-                return std::make_unique<Core::EncryptionServiceV1>(std::move(source), g_rnd, salt);
-
             default:
                 throw std::invalid_argument("version is out of range");
         }
@@ -594,14 +590,6 @@ namespace GUI {
             {
                 switch (enc_version)
                 {
-                    case PGS::EncryptionVersion::EncryptionV1:
-                        if (ui->source_line_edit->text().isEmpty() &&
-                            !prompt_warning_yes_no("Do you really want to encrypt the secret without the salt?\n"
-                                                   "The ciphers will be the same for the same passwords.")) {
-                            return;
-                        }
-
-                        break;
                     case PGS::EncryptionVersion::EncryptionV2:
 
                         if (!ui->source_line_edit->text().isEmpty() &&
@@ -1380,7 +1368,6 @@ namespace GUI {
     {
         ui->password_format_combo_box->clear();
         ui->password_format_combo_box->addItem("v2 (Latest)", static_cast<int>(PGS::EncryptionVersion::EncryptionV2));
-        ui->password_format_combo_box->addItem("v1", static_cast<int>(PGS::EncryptionVersion::EncryptionV1));
         ui->password_format_combo_box->setEditable(false);
     }
 

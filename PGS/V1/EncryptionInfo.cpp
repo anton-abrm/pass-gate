@@ -34,9 +34,7 @@ std::optional<std::unique_ptr<PGS::V1::EncryptionInfo>> PGS::V1::EncryptionInfo:
 
     std::unique_ptr<EncryptionInfo> result;
 
-    if (parts[1] == "v1")
-        result = std::make_unique<EncryptionInfo>(EncryptionVersion::EncryptionV1);
-    else if (parts[1] == "v2")
+    if (parts[1] == "v2")
         result = std::make_unique<EncryptionInfo>(EncryptionVersion::EncryptionV2);
 
     if (!result)
