@@ -360,12 +360,24 @@ namespace Password {
         }
 
         if (s.size() % 4 == 3) {
+
+            // Reject non-canonical input: the spare low bits of the last character
+            // must be zero, otherwise they would be silently dropped.
+            if (c_hhhs_lookup.at(s[i + 2]) & 0x03)
+                return std::nullopt;
+
             output.push_back(c_hhhs_lookup.at(s[i]) << 2 | c_hhhs_lookup.at(s[i + 1]) >> 4);
             output.push_back(c_hhhs_lookup.at(s[i + 1]) << 4 | c_hhhs_lookup.at(s[i + 2]) >> 2);
             return output;
         }
 
         if (s.size() % 4 == 2) {
+
+            // Reject non-canonical input: the spare low bits of the last character
+            // must be zero, otherwise they would be silently dropped.
+            if (c_hhhs_lookup.at(s[i + 1]) & 0x0F)
+                return std::nullopt;
+
             output.push_back(c_hhhs_lookup.at(s[i]) << 2 | c_hhhs_lookup.at(s[i + 1]) >> 4);
             return output;
         }
