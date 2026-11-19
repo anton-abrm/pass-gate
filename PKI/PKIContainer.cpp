@@ -134,6 +134,8 @@ Base::ZBytes PKI::PKIContainer::sign(std::span<const uint8_t> id, std::span<cons
     if (EVP_PKEY_sign(ctx.get(), sign.data(), &sign_length, md, sizeof(md)) <= 0)
         throw std::runtime_error("Unable to sign data.");
 
+    sign.resize(sign_length);
+
     return sign;
 }
 
