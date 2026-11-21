@@ -919,9 +919,30 @@ namespace GUI {
         {
             text = ui->copy_secret_button->text();
 
-            QApplication::clipboard()->setText(
-                    SecretFormatter::convert_password_to_original_from(
-                            ui->secret_line_edit->text()));
+            auto* mimeData = new QMimeData();
+
+            const auto secret = SecretFormatter::convert_password_to_original_from(
+                ui->secret_line_edit->text());
+
+            mimeData->setText(secret);
+
+#if defined(_WIN32)
+            // Keep the secret out of clipboard history, cloud clipboard sync and clipboard monitors.
+            // https://learn.microsoft.com/en-us/windows/win32/dataxchg/clipboard-formats#cloud-clipboard-and-clipboard-history-formats
+            const QByteArray dword_zero(4, '\0');
+            mimeData->setData(R"(application/x-qt-windows-mime;value="ExcludeClipboardContentFromMonitorProcessing")", dword_zero);
+            mimeData->setData(R"(application/x-qt-windows-mime;value="CanIncludeInClipboardHistory")", dword_zero);
+            mimeData->setData(R"(application/x-qt-windows-mime;value="CanUploadToCloudClipboard")", dword_zero);
+#elif defined(__APPLE__)
+            // Qt maps this MIME type to the org.nspasteboard.ConcealedType pasteboard type.
+            // http://nspasteboard.org
+            mimeData->setData("application/x-nspasteboard-concealed-type", secret.toUtf8());
+#else
+            // X11/Wayland clipboard managers (Klipper, CopyQ) skip entries with this hint.
+            mimeData->setData("x-kde-passwordManagerHint", "secret");
+#endif
+
+            QApplication::clipboard()->setMimeData(mimeData);
 
             seconds = 15;
             ui->copy_secret_button->setText(QString::number(seconds));
