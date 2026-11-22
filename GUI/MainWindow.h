@@ -80,10 +80,6 @@ namespace GUI {
         void reset_format_combo_box_for_decryption();
         void reset_format_combo_box_for_split_recombine();
 
-        void reset_format_combo_box_for_signature();
-        void reset_format_combo_box_for_bip39();
-        void reset_format_combo_box_for_random();
-
         void fill_default_pkcs11_providers();
 
         static void decorate_dialog(QWidget *widget);
@@ -93,6 +89,7 @@ namespace GUI {
 
         void pin_key_button_clicked();
         void go_button_clicked();
+        void exit_button_clicked();
         void apply_button_clicked();
         void show_secret_button_toggled(bool checked);
         void show_mnemonic_button_toggled(bool checked);
@@ -105,13 +102,11 @@ namespace GUI {
         void source_line_edit_editing_finished();
         void command_combo_box_index_changed();
         void password_format_combo_box_text_changed();
-        void application_focus_changed(QWidget *old);
         void save_data_button_clicked();
         void clear_data_button_clicked();
         void load_data_button_clicked();
         void select_provider_button_clicked();
         void data_plain_edit_text_changed();
-        void entropy_type_combo_box_index_changed();
 
     private:
         Ui::MainWindow *ui;

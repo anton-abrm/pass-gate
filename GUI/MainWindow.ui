@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>820</width>
+    <width>860</width>
     <height>400</height>
    </rect>
   </property>
@@ -14,94 +14,22 @@
    <string>Pass Gate</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="main_layout" columnstretch="1,1,1,1,0,0" columnminimumwidth="0,0,0,0,80,80">
-    <item row="4" column="5">
-     <widget class="QPushButton" name="format_button">
-      <property name="text">
-       <string>Format</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="2">
-     <widget class="QComboBox" name="command_combo_box"/>
-    </item>
-    <item row="4" column="4">
-     <widget class="QComboBox" name="source_format_combo_box">
-      <property name="editable">
-       <bool>true</bool>
-      </property>
-      <item>
-       <property name="text">
-        <string>ls</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="6" column="5">
-     <widget class="QPushButton" name="enter_button">
+   <layout class="QGridLayout" name="main_layout" columnstretch="1,1,1,0,0,0" columnminimumwidth="0,0,0,80,80,80">
+    <item row="8" column="0" colspan="3">
+     <widget class="QLineEdit" name="secret_line_edit">
       <property name="focusPolicy">
-       <enum>Qt::ClickFocus</enum>
+       <enum>Qt::FocusPolicy::ClickFocus</enum>
       </property>
-      <property name="text">
-       <string>Enter</string>
+      <property name="inputMask">
+       <string/>
       </property>
-     </widget>
-    </item>
-    <item row="6" column="4">
-     <widget class="QPushButton" name="go_button">
-      <property name="autoFillBackground">
-       <bool>true</bool>
+      <property name="echoMode">
+       <enum>QLineEdit::EchoMode::Password</enum>
       </property>
-      <property name="text">
-       <string>Run</string>
+      <property name="placeholderText">
+       <string>pa$$word</string>
       </property>
-      <property name="checkable">
-       <bool>false</bool>
-      </property>
-      <property name="checked">
-       <bool>false</bool>
-      </property>
-      <property name="autoDefault">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="3">
-     <widget class="QComboBox" name="password_format_combo_box">
-      <property name="editable">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="5">
-     <widget class="QPushButton" name="apply_button">
-      <property name="focusPolicy">
-       <enum>Qt::ClickFocus</enum>
-      </property>
-      <property name="text">
-       <string>Apply</string>
-      </property>
-     </widget>
-    </item>
-    <item row="8" column="4">
-     <widget class="QPushButton" name="show_secret_button">
-      <property name="focusPolicy">
-       <enum>Qt::StrongFocus</enum>
-      </property>
-      <property name="text">
-       <string>Show</string>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="5">
-     <widget class="QPushButton" name="show_mnemonic_button">
-      <property name="text">
-       <string>Show</string>
-      </property>
-      <property name="checkable">
+      <property name="clearButtonEnabled">
        <bool>true</bool>
       </property>
      </widget>
@@ -111,7 +39,7 @@
       <item>
        <spacer name="verticalSpacer">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -145,7 +73,7 @@
       <item>
        <spacer name="verticalSpacer_2">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -157,22 +85,21 @@
       </item>
      </layout>
     </item>
-    <item row="2" column="5">
-     <widget class="QPushButton" name="pin_key_button">
-      <property name="focusPolicy">
-       <enum>Qt::ClickFocus</enum>
+    <item row="6" column="3" colspan="2">
+     <widget class="QPushButton" name="go_button">
+      <property name="autoFillBackground">
+       <bool>true</bool>
       </property>
       <property name="text">
-       <string>Pin</string>
-      </property>
-     </widget>
-    </item>
-    <item row="8" column="5">
-     <widget class="QPushButton" name="copy_secret_button">
-      <property name="text">
-       <string>Copy</string>
+       <string>Run</string>
       </property>
       <property name="checkable">
+       <bool>false</bool>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+      <property name="autoDefault">
        <bool>true</bool>
       </property>
      </widget>
@@ -180,64 +107,13 @@
     <item row="5" column="0" colspan="5">
      <widget class="QPlainTextEdit" name="data_plain_edit">
       <property name="focusPolicy">
-       <enum>Qt::ClickFocus</enum>
+       <enum>Qt::FocusPolicy::ClickFocus</enum>
       </property>
       <property name="undoRedoEnabled">
        <bool>false</bool>
       </property>
       <property name="placeholderText">
        <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="0">
-     <widget class="QComboBox" name="entropy_type_combo_box"/>
-    </item>
-    <item row="8" column="0" colspan="4">
-     <widget class="QLineEdit" name="secret_line_edit">
-      <property name="focusPolicy">
-       <enum>Qt::ClickFocus</enum>
-      </property>
-      <property name="inputMask">
-       <string/>
-      </property>
-      <property name="echoMode">
-       <enum>QLineEdit::Password</enum>
-      </property>
-      <property name="placeholderText">
-       <string>pa$$word</string>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0" colspan="5">
-     <widget class="QLineEdit" name="mnemonic_line_edit">
-      <property name="echoMode">
-       <enum>QLineEdit::Password</enum>
-      </property>
-      <property name="placeholderText">
-       <string>mnemonic</string>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0" colspan="5">
-     <widget class="QComboBox" name="key_combo_box"/>
-    </item>
-    <item row="4" column="0" colspan="4">
-     <widget class="QLineEdit" name="source_line_edit">
-      <property name="text">
-       <string/>
-      </property>
-      <property name="placeholderText">
-       <string>salt</string>
-      </property>
-      <property name="clearButtonEnabled">
-       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -262,14 +138,142 @@
          <string>...</string>
         </property>
         <property name="toolButtonStyle">
-         <enum>Qt::ToolButtonTextOnly</enum>
+         <enum>Qt::ToolButtonStyle::ToolButtonTextOnly</enum>
         </property>
        </widget>
       </item>
      </layout>
     </item>
+    <item row="4" column="4">
+     <widget class="QComboBox" name="source_format_combo_box">
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <item>
+       <property name="text">
+        <string>ls</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="8" column="3">
+     <widget class="QPushButton" name="show_secret_button">
+      <property name="focusPolicy">
+       <enum>Qt::FocusPolicy::StrongFocus</enum>
+      </property>
+      <property name="text">
+       <string>Show</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0" colspan="4">
+     <widget class="QLineEdit" name="source_line_edit">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>salt</string>
+      </property>
+      <property name="clearButtonEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="5">
+     <widget class="QPushButton" name="show_mnemonic_button">
+      <property name="text">
+       <string>Show</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="5">
+     <widget class="QPushButton" name="apply_button">
+      <property name="focusPolicy">
+       <enum>Qt::FocusPolicy::ClickFocus</enum>
+      </property>
+      <property name="text">
+       <string>Apply</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="5">
+     <widget class="QPushButton" name="exit_button">
+      <property name="text">
+       <string>Exit</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="5">
+     <widget class="QPushButton" name="pin_key_button">
+      <property name="focusPolicy">
+       <enum>Qt::FocusPolicy::ClickFocus</enum>
+      </property>
+      <property name="text">
+       <string>Pin</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="5">
+     <widget class="QPushButton" name="format_button">
+      <property name="text">
+       <string>Format</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="5">
+     <widget class="QPushButton" name="enter_button">
+      <property name="focusPolicy">
+       <enum>Qt::FocusPolicy::ClickFocus</enum>
+      </property>
+      <property name="text">
+       <string>Enter</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="5">
+     <widget class="QLineEdit" name="mnemonic_line_edit">
+      <property name="echoMode">
+       <enum>QLineEdit::EchoMode::Password</enum>
+      </property>
+      <property name="placeholderText">
+       <string>mnemonic</string>
+      </property>
+      <property name="clearButtonEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="4">
+     <widget class="QPushButton" name="copy_secret_button">
+      <property name="text">
+       <string>Copy</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0" colspan="5">
+     <widget class="QComboBox" name="key_combo_box"/>
+    </item>
+    <item row="6" column="0">
+     <widget class="QComboBox" name="command_combo_box"/>
+    </item>
     <item row="6" column="1">
-     <widget class="QComboBox" name="entropy_format_combo_box"/>
+     <widget class="QComboBox" name="password_format_combo_box">
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="2">
+     <widget class="QComboBox" name="entropy_type_combo_box"/>
     </item>
    </layout>
   </widget>
