@@ -177,26 +177,6 @@ namespace GUI {
         QPalette palette = ui->go_button->palette();
         palette.setColor(QPalette::Button, QColor(2, 68, 79));
         ui->go_button->setPalette(palette);
-
-        if (QCoreApplication::arguments().contains("-")) {
-
-            std::string s;
-            std::cin >> s;
-
-            try {
-                if (QCoreApplication::arguments().contains("-s")) {
-                    ui->secret_line_edit->setText(QString::fromStdString(s));
-                }
-                else {
-                    set_secret_file_content(QString::fromStdString(s));
-                }
-            }
-            catch (const std::runtime_error& ex) {
-                prompt_warning(ex.what());
-            }
-        }
-
-
     }
 
     MainWindow::~MainWindow() {
