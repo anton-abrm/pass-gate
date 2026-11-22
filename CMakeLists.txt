@@ -32,7 +32,6 @@ set(PROJECT_SOURCES
         Core/AadEncryptionService.cpp
         Core/EncryptionServiceV2.cpp
         Core/EntropySource.cpp
-        Core/EntropySource.cpp
         Core/PKIProvider.cpp
         Core/PublicKeyInfo.cpp
         Core/RandomEntropySource.cpp
