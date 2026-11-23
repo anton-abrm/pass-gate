@@ -167,6 +167,8 @@ add_executable(pass-gate-tests
         Tests/StringUtilTests.cpp
         PGS/V1/RandomEntropySource.cpp
         PGS/V1/EncryptionInfo.cpp
+        Crypto/BIP39.cpp
+        Tests/BIP39Tests.cpp
 )
 
 if (WIN32)
