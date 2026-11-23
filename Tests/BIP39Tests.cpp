@@ -141,3 +141,26 @@ TEST(BIP39, all) {
 
 }
 
+TEST(BIP39, entropy_to_mnemonic_rejects_invalid_size) {
+
+    EXPECT_FALSE(BIP39::entropy_to_mnemonic(std::vector<uint8_t>{}).has_value());
+    EXPECT_FALSE(BIP39::entropy_to_mnemonic(std::vector<uint8_t>(15)).has_value());
+    EXPECT_FALSE(BIP39::entropy_to_mnemonic(std::vector<uint8_t>(36)).has_value());
+    EXPECT_FALSE(BIP39::entropy_to_mnemonic(std::vector<uint8_t>(48)).has_value());
+    EXPECT_FALSE(BIP39::entropy_to_mnemonic(std::vector<uint8_t>(64)).has_value());
+}
+
+TEST(BIP39, mnemonic_to_entropy_rejects_invalid_size) {
+
+    EXPECT_FALSE(BIP39::mnemonic_to_entropy("").has_value());
+
+    // 11 words: not a multiple of 3.
+    EXPECT_FALSE(BIP39::mnemonic_to_entropy(
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about").has_value());
+
+    // 27 words with a valid checksum (36 zero bytes): exceeds the 24-word maximum.
+    EXPECT_FALSE(BIP39::mnemonic_to_entropy(
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon "
+            "bread").has_value());
+}

@@ -2125,7 +2125,7 @@ std::optional<Base::ZBytes> BIP39::mnemonic_to_entropy(std::string_view mnemonic
 
     uint64_t buffer{0};
 
-    if (words.size() % 3 != 0)
+    if (words.size() > 24 || words.size() % 3 != 0)
         return std::nullopt;
 
     const auto expected_bytes = words.size() / 3 * 4;
@@ -2191,7 +2191,7 @@ std::optional<Base::ZString> BIP39::entropy_to_mnemonic(std::span<const uint8_t>
     if (entropy.empty())
         return std::nullopt;
 
-    if (entropy.size() % 4 != 0)
+    if (entropy.size() > 32 || entropy.size() % 4 != 0)
         return std::nullopt;
 
     Base::ZString result;
@@ -2237,8 +2237,6 @@ std::optional<Base::ZString> BIP39::entropy_to_mnemonic(std::span<const uint8_t>
     word_index |= computed_checksum >> (checksum_bits - remaining_buffer_bits);
 
     result.append(c_dictionary[word_index]);
-
-    // TODO: Implement appending the remaining entropy
 
     return result;
 }
