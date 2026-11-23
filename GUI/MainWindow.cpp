@@ -1506,7 +1506,12 @@ namespace GUI {
 
         std::optional<bool> is_hhhs_opt;
 
-        for (const auto& line: lines) {
+        for (const auto& raw_line: lines) {
+
+            const auto line = raw_line.trimmed();
+
+            if (line.isEmpty())
+                continue;
 
             auto parts = line.split('.', Qt::SplitBehaviorFlags::SkipEmptyParts);
 
@@ -1530,6 +1535,9 @@ namespace GUI {
 
             shares[id] = entropy.value();
         }
+
+        if (shares.empty())
+            return;
 
         const auto m_n = parse_m_n(ui->password_format_combo_box->currentText());
 
